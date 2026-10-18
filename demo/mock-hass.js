@@ -43,7 +43,7 @@ function makeActivities() {
 
 function makeStates() {
   const states = {};
-  const set = (id, state) => { states[id] = { entity_id: id, state: String(state), attributes: {} }; };
+  const set = (id, state, attributes = {}) => { states[id] = { entity_id: id, state: String(state), attributes }; };
   BIKES.forEach((b, i) => {
     const p = `sensor.${b.prefix}`;
     set(`${p}_kilometerstand`, 2400 + i * 1300);
@@ -71,6 +71,10 @@ function makeStates() {
     set(`${p}_letzte_fahrt_max_leistung`, 512);
     set(`${p}_letzte_fahrt_sprunge`, i ? 4 : 0);
     set(`${p}_letzte_fahrt_wheelies`, i ? 2 : 0);
+    const ranges = i ? { ECO: 104, "TOUR+": 81, eMTB: 63, TURBO: 47 } : { ECO: 128, TOUR: 96, SPORT: 72, TURBO: 55 };
+    for (const [mode, km] of Object.entries(ranges)) {
+      set(`${p}_reachable_range_${mode.toLowerCase().replace("+", "")}`, km, { assist_mode: mode });
+    }
   });
   return states;
 }

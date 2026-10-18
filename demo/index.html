@@ -11,7 +11,7 @@
     }
     body { margin: 0; padding: 16px; background: #111; font-family: Roboto, system-ui, sans-serif;
            color: var(--primary-text-color); }
-    main { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px;
+    main { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr)); gap: 16px;
            max-width: 1200px; margin: 0 auto; align-items: start; }
     ha-card { display: block; background: var(--card-background-color); }
     ha-icon { display: inline-block; width: 16px; height: 16px; }
@@ -32,6 +32,7 @@
         { type: "ebike-tricks-card", bikes },
         { type: "ebike-last-ride-card", bikes },
         { type: "ebike-records-card", bikes },
+        { type: "ebike-range-card", bikes },
       ];
       const main = document.getElementById("cards");
       for (const cfg of configs) {
