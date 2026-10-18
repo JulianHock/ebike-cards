@@ -10,6 +10,7 @@ Dashboard-Karten für Home Assistant, die die Daten der [ha-bosch-ebike](https:/
 | Letzte Tour | `custom:ebike-last-ride-card` | „Letzte Fahrt“-Sensoren |
 | Bestwerte | `custom:ebike-records-card` | alle Touren (Websocket) |
 | Reichweite | `custom:ebike-range-card` | „Reachable Range“-Sensoren je Modus |
+| Jahresziel | `custom:ebike-goal-card` | alle Touren (Websocket) |
 
 Alle Karten stecken in einer Datei (`ebike-cards.js`). In HA braucht man also nur eine Ressource.
 
@@ -170,6 +171,23 @@ show_scale: true
 Die Karte zeigt die aktuelle Restreichweite je Bike und Unterstützungsmodus aus den Sensoren „Reachable Range …“ der Integration.
 Welche Modi es gibt, hängt vom Motor ab. Ohne `modes` erscheinen alle vorhandenen Modi, sortiert von sparsam bis kräftig (Eco grün … Turbo rot).
 Ein Klick auf einen Modus in der Legende blendet ihn aus bzw. wieder ein.
+
+### Jahresziel
+
+```yaml
+type: custom:ebike-goal-card
+title: Jahresziel
+bikes:
+  - { name: Trekking, prefix: e_bike_trekking, goal: 3000 }   # goal: Ziel in km für das laufende Jahr
+  - { name: MTB, prefix: e_bike_mtb, goal: 1500 }
+bike: Trekking           # Start-Bike; sonst das erste
+show_last_year: true     # Vorjahr als graue Linie
+height: 180
+```
+
+Jedes Bike hat sein eigenes Ziel; oben wählst du das Bike aus, die Auswahl merkt sich die Karte je Browser.
+Das Diagramm zeigt die kumulierten Kilometer des Jahres gegen die Ziellinie (gleichmäßiges Tempo bis 31.12.) und das Vorjahr.
+Darunter: Anteil am Ziel, Vorsprung oder Rückstand gegenüber dem Plan und die nötigen km je Woche für den Rest des Jahres.
 
 ## Entwicklung
 
