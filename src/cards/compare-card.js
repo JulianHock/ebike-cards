@@ -1,7 +1,8 @@
 /* =====================================================================
  * eBike Compare Card – Rangliste der Absolutwerte je Bike
  *   type: custom:ebike-compare-card
- *   bikes: [{ name, prefix, color }]
+ *   bikes: [{ name, prefix, color, short_name }]
+ *     short_name: optional kürzerer Name unter den Säulen (vertikales Layout); der Tooltip zeigt weiter 'name'
  *   Reiter: odometer, elevation, rides, duration, cycles, calories,
  *           energy (kWh vom Akku abgegeben), efficiency (Ø Wh/km, sparsamstes zuerst)
  *   Optional: show_scale: false blendet die Skala (Achse + Hilfslinien) aus
@@ -99,6 +100,7 @@ class EbikeCompareCard extends HTMLElement {
     const def = this._defs[this._metric];
     const rows = cfg.bikes.map((b, i) => ({
       name: b.name || b.prefix,
+      short: b.short_name || b.name || b.prefix,
       color: b.color || PALETTE[i % PALETTE.length],
       v: this._metricValue(b.prefix, def),
     }));
@@ -160,7 +162,7 @@ class EbikeCompareCard extends HTMLElement {
             </div>`;
       }).join("");
       const names = rows.map((r) => `
-            <div class="cname">${esc(r.name).replace(/-/g, "&#8209;")}</div>`).join("");
+            <div class="cname">${esc(r.short).replace(/-/g, "&#8209;")}</div>`).join("");
       list = `
         <div class="vchart" style="--h:${Number(cfg.height) || 170}px;--yw:${yw}px;padding-top:${headroom}px">
           <div class="yax">${ylabs}</div>

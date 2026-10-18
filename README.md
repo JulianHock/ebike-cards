@@ -58,6 +58,13 @@ Die Kartenkonfiguration kennt **Bikes** auf zwei Wegen:
 - `prefix`: der Entitäts-Präfix der Sensoren, z. B. `e_bike_trekking` für `sensor.e_bike_trekking_kilometerstand`
 - `bike`: alternativ der Gerätename oder die Bike-ID aus der Integration (nur Tricks und Bestwerte)
 
+Unter den Säulen von Vergleich und Reichweite brechen lange Namen auf zwei Zeilen um und werden erst danach gekürzt.
+Reicht der Platz trotzdem nicht, setzt `short_name` einen kürzeren Namen für die Achse; der Tooltip zeigt weiter `name`:
+
+```yaml
+  - { name: Andreas E-MTB, short_name: Andr. MTB, prefix: e_mtb_andreas }
+```
+
 ### Fahrstatistik
 
 ```yaml

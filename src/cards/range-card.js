@@ -1,7 +1,8 @@
 /* =====================================================================
  * eBike Range Card – aktuelle Restreichweite je Bike und Unterstützungsmodus
  *   type: custom:ebike-range-card
- *   bikes: [{ name, prefix, color }]   (wie bei der Vergleichskarte)
+ *   bikes: [{ name, prefix, color, short_name }]   (wie bei der Vergleichskarte)
+ *     short_name: optional kürzerer Name unter den Balken; der Tooltip zeigt weiter 'name'
  *   Optional: modes: [Eco, Tour, eMTB, Turbo]   welche Modi erscheinen, Reihenfolge wie angegeben
  *             colors: { Eco: "#4caf50" }        eigene Farbe je Modus
  *             height: 170, show_scale: false
@@ -106,6 +107,7 @@ class EbikeRangeCard extends HTMLElement {
     const cfg = this._config;
     const rows = cfg.bikes.map((b, i) => ({
       name: b.name || b.prefix,
+      short: b.short_name || b.name || b.prefix,
       color: b.color || PALETTE[i % PALETTE.length],
       ranges: this._ranges(b.prefix),
     }));
@@ -162,7 +164,7 @@ class EbikeRangeCard extends HTMLElement {
             </div>`;
       }).join("");
       const names = rows.map((r) => `
-            <div class="cname"><span class="dot" style="background:${r.color}"></span>${esc(r.name).replace(/-/g, "&#8209;")}</div>`).join("");
+            <div class="cname"><span class="dot" style="background:${r.color}"></span><span class="cn">${esc(r.short).replace(/-/g, "&#8209;")}</span></div>`).join("");
       body = `
         <div class="vchart" style="--h:${Number(cfg.height) || 170}px;--yw:${yw}px">
           <div class="yax">${ylabs}</div>
@@ -208,9 +210,14 @@ class EbikeRangeCard extends HTMLElement {
                background: rgba(127,127,127,.12); visibility: hidden; }
         .col.hover .chl { visibility: visible; }
         .names { display: flex; gap: 8px; }
-        .cname { margin-top: 7px; font-size: 12px; line-height: 1.25; text-align: center; color: var(--sub);
-                 overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 0; min-width: 0; }
-        .cname .dot { width: 7px; height: 7px; border-radius: 2px; margin-right: 5px; vertical-align: 1px; }
+        .cname { margin-top: 7px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+                 flex: 1 1 0; min-width: 0; }
+        .cname .dot { width: 7px; height: 7px; border-radius: 2px; }
+        /* Wie bei der Vergleichskarte: an Leerzeichen auf bis zu zwei Zeilen umbrechen, erst dann kürzen.
+           Der Farbpunkt steht darüber, damit er keine eigene Zeile belegt. */
+        .cn { max-width: 100%; font-size: 12px; line-height: 1.25; text-align: center; color: var(--sub);
+              display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+              overflow-wrap: break-word; hyphens: none; }
         .tip { position: absolute; top: 0; z-index: 2; min-width: 140px; max-width: 230px; pointer-events: none;
                background: #2c2c2e; color: #fff; border-radius: 12px; padding: 9px 11px;
                box-shadow: 0 8px 24px rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.08); font-size: 12.5px; }
