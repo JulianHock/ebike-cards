@@ -75,6 +75,7 @@ metric: distance         # Start-Reiter
 metrics: [distance, elevation, rides, duration, speed, calories]
 stacked: true
 show_totals: true        # false blendet alle Summen über alle Bikes aus
+legend_values: false     # true zeigt in der Legende die Summe je Bike im Zeitraum
 height: 220
 hide_unassigned: false   # Touren ohne Bike-Zuordnung ausblenden
 names:  { "E-Bike Trekking": Trekking }

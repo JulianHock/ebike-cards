@@ -8,6 +8,7 @@
  *           legt fest, welche Reiter angezeigt werden (Reihenfolge wie angegeben).
  * Optional: show_totals: false blendet alle Summen über alle Bikes aus
  *           (Kennzahlen unten, Zahlen über den Balken, Summe im Tooltip).
+ * Optional: legend_values: true zeigt in der Legende neben jedem Bike seine Summe im Zeitraum.
  */
 
 import { PALETTE, MONTHS_SHORT, MONTHS_LONG, DAY } from "../shared/constants.js";
@@ -91,6 +92,7 @@ class EbikeStatsProCard extends HTMLElement {
       names: {},
       hide_unassigned: false,
       show_totals: true,
+      legend_values: false,
       refresh_minutes: 15,
       ...config,
     };
@@ -505,14 +507,18 @@ class EbikeStatsProCard extends HTMLElement {
     const metricKey = this._metric;
     const metric = ESP_METRICS[metricKey];
     el.innerHTML = this._series.map((s) => {
-      const all = espEmptyAgg();
-      for (const b of this._agg.buckets) if (b.agg[s.id]) espAdd(all, b.agg[s.id]);
-      const v = espValue(metricKey, all);
+      let val = "";
+      if (this._config.legend_values) {
+        const all = espEmptyAgg();
+        for (const b of this._agg.buckets) if (b.agg[s.id]) espAdd(all, b.agg[s.id]);
+        const v = espValue(metricKey, all);
+        val = `<span class="val">${fmt(v, metric.sum ? metric.digits : metric.tip)}${metric.unit ? `&nbsp;${metric.unit}` : ""}</span>`;
+      }
       const off = this._hidden.has(s.id);
       return `<button class="chip ${off ? "off" : ""}" data-series="${esc(s.id)}" title="${off ? "Einblenden" : "Ausblenden"}">
           <span class="dot" style="background:${s.color}"></span>
           <span class="name">${esc(s.name)}</span>
-          <span class="val">${fmt(v, metric.sum ? metric.digits : metric.tip)}${metric.unit ? `&nbsp;${metric.unit}` : ""}</span>
+          ${val}
         </button>`;
     }).join("");
   }
