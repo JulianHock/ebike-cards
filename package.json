@@ -1,6 +1,6 @@
 {
   "name": "ebike-cards",
-  "version": "1.15.1",
+  "version": "1.16.0",
   "description": "Home Assistant Dashboard-Karten für die ha-bosch-ebike Integration",
   "homepage": "https://github.com/JulianHock/ebike-cards",
   "private": true,
