@@ -21,7 +21,10 @@
   <main id="cards"></main>
   <script type="module">
     // Platzhalter für die HA-Elemente, die die Karten verwenden
-    customElements.define("ha-card", class extends HTMLElement {});
+    // ha-card ist in HA ein Block-Element; ohne das läge das Kartenpadding falsch
+    customElements.define("ha-card", class extends HTMLElement {
+      connectedCallback() { this.style.display = "block"; }
+    });
     customElements.define("ha-icon", class extends HTMLElement {});
 
     import("../dist/ebike-cards.js").then(async () => {

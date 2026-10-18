@@ -220,7 +220,8 @@ class EbikeCompareCard extends HTMLElement {
         .xax span.last { transform: translateX(-100%); }
         .head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
         .unit { font-size: 12.5px; color: var(--sub); }
-        .vchart { display: grid; grid-template-columns: var(--yw) 1fr; column-gap: 6px; }
+        /* minmax(0, …): lange Bike-Namen dürfen die Spalte nicht über die Kartenbreite dehnen */
+        .vchart { display: grid; grid-template-columns: var(--yw) minmax(0, 1fr); column-gap: 6px; }
         .yax { position: relative; height: var(--h); }
         .yl { position: absolute; right: 0; transform: translateY(50%); font-size: 10.5px; line-height: 1;
               color: var(--sub); font-variant-numeric: tabular-nums; white-space: nowrap; }

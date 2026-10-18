@@ -189,7 +189,8 @@ class EbikeRangeCard extends HTMLElement {
                 border-radius: 999px; background: var(--chip); transition: opacity .15s; white-space: nowrap; }
         .chip.off { opacity: .4; }
         .chip.off .dot { background: transparent !important; box-shadow: inset 0 0 0 1.5px var(--sub); }
-        .vchart { position: relative; display: grid; grid-template-columns: var(--yw) 1fr; column-gap: 6px;
+        /* minmax(0, …): lange Bike-Namen dürfen die Spalte nicht über die Kartenbreite dehnen */
+        .vchart { position: relative; display: grid; grid-template-columns: var(--yw) minmax(0, 1fr); column-gap: 6px;
                   padding-top: 8px; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
         .yax { position: relative; height: var(--h); }
         .yl { position: absolute; right: 0; transform: translateY(50%); font-size: 10.5px; line-height: 1;
