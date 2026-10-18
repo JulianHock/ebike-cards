@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>eBike Cards Demo</title>
+  <style>
+    :root {
+      --primary-text-color: #e1e1e1; --secondary-text-color: #9e9e9e;
+      --primary-color: #03a9f4; --card-background-color: #1c1c1c;
+    }
+    body { margin: 0; padding: 16px; background: #111; font-family: Roboto, system-ui, sans-serif;
+           color: var(--primary-text-color); }
+    main { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px;
+           max-width: 1200px; margin: 0 auto; align-items: start; }
+    ha-card { display: block; background: var(--card-background-color); }
+    ha-icon { display: inline-block; width: 16px; height: 16px; }
+  </style>
+</head>
+<body>
+  <main id="cards"></main>
+  <script type="module">
+    // Platzhalter für die HA-Elemente, die die Karten verwenden
+    customElements.define("ha-card", class extends HTMLElement {});
+    customElements.define("ha-icon", class extends HTMLElement {});
+
+    import("../dist/ebike-cards.js").then(async () => {
+      const { hass, bikes } = await import("./mock-hass.js");
+      const configs = [
+        { type: "ebike-stats-pro-card" },
+        { type: "ebike-compare-card", bikes },
+        { type: "ebike-tricks-card", bikes },
+        { type: "ebike-last-ride-card", bikes },
+        { type: "ebike-records-card", bikes },
+      ];
+      const main = document.getElementById("cards");
+      for (const cfg of configs) {
+        const el = document.createElement(cfg.type);
+        el.setConfig(cfg);
+        main.appendChild(el);
+        el.hass = hass;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+name: Release
+
+# Ein Tag vX.Y.Z (z. B. per `npm version minor && git push --follow-tags`) baut das Bundle
+# und veröffentlicht es als GitHub-Release – HACS bietet es dann als Update an.
+# Tags mit Bindestrich (v1.16.0-beta.0) werden als Pre-Release veröffentlicht.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Tag und package.json-Version vergleichen
+        run: |
+          pkg="v$(node -p "require('./package.json').version")"
+          if [ "$pkg" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME passt nicht zu package.json ($pkg)"
+            exit 1
+          fi
+      - run: npm ci
+      - run: npm run build
+      - name: GitHub-Release erstellen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=""
+          case "$GITHUB_REF_NAME" in *-*) flags="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/ebike-cards.js \
+            --title "$GITHUB_REF_NAME" --generate-notes $flags
