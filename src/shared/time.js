@@ -38,16 +38,11 @@ export function shortDate(ts) {
   return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
 }
 
-// "Heute", "Gestern", "Mi, 14.10." oder "3.9.2026"
-export function relativeDay(ts) {
+// "Mi, 14.10.26"
+export function weekdayDate(ts) {
   const d = new Date(ts);
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const day = new Date(d); day.setHours(0, 0, 0, 0);
-  const diff = Math.round((today - day) / DAY);
-  if (diff === 0) return "Heute";
-  if (diff === 1) return "Gestern";
-  if (diff > 1 && diff < 7) return `${WEEKDAYS[d.getDay()]}, ${d.getDate()}.${d.getMonth() + 1}.`;
-  return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${WEEKDAYS[d.getDay()]}, ${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${pad(d.getFullYear() % 100)}`;
 }
 
 // "Mi, 14.10.2026 · 16:30"

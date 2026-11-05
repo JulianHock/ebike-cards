@@ -18,7 +18,7 @@
 
 import { PALETTE } from "../shared/constants.js";
 import { fmt, esc } from "../shared/format.js";
-import { parseTime, hm, clock, relativeDay } from "../shared/time.js";
+import { parseTime, hm, clock, weekdayDate } from "../shared/time.js";
 import { registerCard } from "../shared/register.js";
 
 const ELR_PLATFORM = "ha_bosch_ebike";
@@ -200,7 +200,7 @@ class EbikeLastRideCard extends HTMLElement {
         return `<div class="tile" style="--c:${color}"><div class="muted">Noch keine Tour</div></div>`;
       }
       const when = r.start
-        ? `${relativeDay(r.start)}${r.hasTime ? ` · ${clock(r.start)}${r.end ? `–${clock(r.end)}` : ""}` : ""}`
+        ? `${weekdayDate(r.start)}${r.hasTime ? ` · ${clock(r.start)}${r.end ? `–${clock(r.end)}` : ""}` : ""}`
         : "";
       const rt = hm(r.ride);
       const heroes = [
