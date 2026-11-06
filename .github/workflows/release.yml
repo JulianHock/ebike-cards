@@ -10,12 +10,17 @@ on:
 
 permissions:
   contents: write
+  id-token: write # für die Attestation des Bundles
+  attestations: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # für die Prüfung, ob der Tag auf main liegt
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -27,8 +32,24 @@ jobs:
             echo "::error::Tag $GITHUB_REF_NAME passt nicht zu package.json ($pkg)"
             exit 1
           fi
+      - name: Finale Tags müssen auf main liegen
+        run: |
+          case "$GITHUB_REF_NAME" in
+            *-*) ;;
+            *)
+              if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+                echo "::error::Tag $GITHUB_REF_NAME liegt nicht auf main"
+                exit 1
+              fi
+              ;;
+          esac
       - run: npm ci
+      - run: npm test
       - run: npm run build
+      - name: Herkunft des Bundles bescheinigen
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: dist/ebike-cards.js
       - name: GitHub-Release erstellen
         env:
           GH_TOKEN: ${{ github.token }}
