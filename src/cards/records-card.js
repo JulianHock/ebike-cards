@@ -12,7 +12,7 @@
  * ===================================================================== */
 
 import { PALETTE } from "../shared/constants.js";
-import { fmt, esc } from "../shared/format.js";
+import { fmt, esc, cssValue } from "../shared/format.js";
 import { hm, weekdayDateTime } from "../shared/time.js";
 import { loadActivities, allBikes, resolveBikeId } from "../shared/bosch.js";
 import { registerCard } from "../shared/register.js";
@@ -42,7 +42,7 @@ class EbikeRecordsCard extends HTMLElement {
     if (!Array.isArray(config.bikes) || !config.bikes.length) {
       throw new Error("Bitte unter 'bikes' mindestens ein Bike mit name und prefix (oder bike) angeben");
     }
-    this._config = { title: "Bestwerte", min_avg_km: 5, refresh_minutes: 15, ...config };
+    this._config = { title: "Bestwerte", min_avg_km: 5, refresh_minutes: 15, ...config, background: cssValue(config.background) };
     const wanted = Array.isArray(config.records) ? config.records : Object.keys(ERC_RECORDS);
     this._records = wanted.filter((r) => ERC_RECORDS[r]);
     if (!this._records.length) this._records = Object.keys(ERC_RECORDS);
@@ -112,7 +112,7 @@ class EbikeRecordsCard extends HTMLElement {
     const cfg = this._config;
     const tabs = cfg.bikes.map((b, i) => `
       <button class="tab ${i === this._sel ? "on" : ""}" data-bike="${i}"
-        style="--c:${b.color || PALETTE[i % PALETTE.length]}">
+        style="--c:${cssValue(b.color) || PALETTE[i % PALETTE.length]}">
         <span class="dot"></span><span>${esc(b.name || b.prefix)}</span>
       </button>`).join("");
 

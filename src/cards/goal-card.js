@@ -13,7 +13,7 @@
  * ===================================================================== */
 
 import { PALETTE, MONTHS_SHORT, MONTHS_LONG, DAY } from "../shared/constants.js";
-import { fmt, esc, niceScale } from "../shared/format.js";
+import { fmt, esc, niceScale, cssValue } from "../shared/format.js";
 import { loadActivities, allBikes, resolveBikeId } from "../shared/bosch.js";
 import { registerCard } from "../shared/register.js";
 
@@ -60,7 +60,7 @@ class EbikeGoalCard extends HTMLElement {
     if (missing.length) {
       throw new Error(`Bitte für jedes Bike ein Jahresziel in km unter 'goal' angeben (fehlt bei: ${missing.join(", ")})`);
     }
-    this._config = { title: "Jahresziel", show_last_year: true, height: 180, refresh_minutes: 15, ...config };
+    this._config = { title: "Jahresziel", show_last_year: true, height: 180, refresh_minutes: 15, ...config, background: cssValue(config.background) };
     const names = config.bikes.map((b) => b.name || b.prefix);
     let saved = null;
     try { saved = localStorage.getItem(`ebike-goal:${this._config.title}`); } catch (e) { /* ignore */ }
@@ -133,7 +133,7 @@ class EbikeGoalCard extends HTMLElement {
 
   _color(i = this._sel) {
     const b = this._config.bikes[i];
-    return b?.color || PALETTE[i % PALETTE.length];
+    return cssValue(b?.color) || PALETTE[i % PALETTE.length];
   }
 
   // Soll-Stand nach Tag 'idx' bei gleichmäßigem Tempo bis 31.12.

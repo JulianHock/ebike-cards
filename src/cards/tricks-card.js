@@ -14,7 +14,7 @@
  * ===================================================================== */
 
 import { PALETTE } from "../shared/constants.js";
-import { fmt, esc } from "../shared/format.js";
+import { fmt, esc, cssValue } from "../shared/format.js";
 import { clock, shortDate, weekdayDateTime } from "../shared/time.js";
 import { loadActivities, allBikes, resolveBikeId } from "../shared/bosch.js";
 import { registerCard } from "../shared/register.js";
@@ -48,7 +48,7 @@ class EbikeTricksCard extends HTMLElement {
     if (!Array.isArray(config.bikes) || !config.bikes.length) {
       throw new Error("Bitte unter 'bikes' mindestens ein Bike mit name und prefix (oder bike) angeben");
     }
-    this._config = { title: "Tricks", sort: true, refresh_minutes: 15, ...config };
+    this._config = { title: "Tricks", sort: true, refresh_minutes: 15, ...config, background: cssValue(config.background) };
     const wanted = Array.isArray(config.tricks) ? config.tricks : Object.keys(ETC_TRICKS);
     this._tricks = wanted.filter((t) => ETC_TRICKS[t]);
     if (!this._tricks.length) this._tricks = Object.keys(ETC_TRICKS);
@@ -95,7 +95,7 @@ class EbikeTricksCard extends HTMLElement {
       }
       return {
         name: cb.name || cb.bike || cb.prefix,
-        color: cb.color || PALETTE[i % PALETTE.length],
+        color: cssValue(cb.color) || PALETTE[i % PALETTE.length],
         id: resolveBikeId(cb, bikes),
         hasData: false,
         per,

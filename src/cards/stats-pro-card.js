@@ -12,7 +12,7 @@
  */
 
 import { PALETTE, MONTHS_SHORT, MONTHS_LONG, DAY } from "../shared/constants.js";
-import { fmt, esc, niceScale } from "../shared/format.js";
+import { fmt, esc, niceScale, cssValue } from "../shared/format.js";
 import { isoWeek } from "../shared/time.js";
 import { loadActivities } from "../shared/bosch.js";
 import { registerCard } from "../shared/register.js";
@@ -95,6 +95,7 @@ class EbikeStatsProCard extends HTMLElement {
       legend_values: false,
       refresh_minutes: 15,
       ...config,
+      background: cssValue(config.background),
     };
     const wanted = Array.isArray(this._config.metrics) ? this._config.metrics : Object.keys(ESP_METRICS);
     this._metrics = wanted.filter((m) => ESP_METRICS[m]);
@@ -171,7 +172,7 @@ class EbikeStatsProCard extends HTMLElement {
           id: bike.id,
           label,
           name: cfg.names[label] || cfg.names[bike.id] || label,
-          color: cfg.colors[label] || cfg.colors[bike.id] || PALETTE[pi++ % PALETTE.length],
+          color: cssValue(cfg.colors[label]) || cssValue(cfg.colors[bike.id]) || PALETTE[pi++ % PALETTE.length],
         });
       }
     }

@@ -17,7 +17,7 @@
  * ===================================================================== */
 
 import { PALETTE } from "../shared/constants.js";
-import { fmt, esc } from "../shared/format.js";
+import { fmt, esc, cssValue } from "../shared/format.js";
 import { parseTime, hm, clock, weekdayDate } from "../shared/time.js";
 import { registerCard } from "../shared/register.js";
 
@@ -63,7 +63,7 @@ class EbikeLastRideCard extends HTMLElement {
     if (!Array.isArray(config.bikes) || !config.bikes.length) {
       throw new Error("Bitte unter 'bikes' mindestens ein Bike mit name und prefix angeben");
     }
-    this._config = { title: "Letzte Tour", show_title: true, ...config };
+    this._config = { title: "Letzte Tour", show_title: true, ...config, background: cssValue(config.background) };
     const wanted = Array.isArray(config.fields) ? config.fields : ELR_FIELDS;
     this._fields = new Set(wanted.filter((f) => ELR_FIELDS.includes(f)));
     const names = config.bikes.map((b) => b.name || b.prefix);
@@ -174,7 +174,7 @@ class EbikeLastRideCard extends HTMLElement {
     const F = this._fields;
     const rows = cfg.bikes.map((b, i) => ({
       name: b.name || b.prefix,
-      color: b.color || PALETTE[i % PALETTE.length],
+      color: cssValue(b.color) || PALETTE[i % PALETTE.length],
       r: this._ride(this._map[i] || {}),
       i,
     }));

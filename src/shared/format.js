@@ -10,6 +10,13 @@ export function esc(s) {
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+// Wert aus der Kartenkonfiguration, der in CSS landet: Farben, var() und Verläufe sind erlaubt.
+// Alles andere ergibt "", damit der Aufrufer auf seinen Standard zurückfällt.
+export function cssValue(v) {
+  const s = String(v ?? "").trim();
+  return /^[\w#%.,()\s/+*-]+$/.test(s) && !/url\s*\(/i.test(s) ? s : "";
+}
+
 export function slug(s) {
   return String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
     .replace(/ß/g, "ss").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");

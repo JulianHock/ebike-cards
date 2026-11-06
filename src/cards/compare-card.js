@@ -9,7 +9,7 @@
  * ===================================================================== */
 
 import { PALETTE } from "../shared/constants.js";
-import { fmt, esc, niceScale, stepDigits } from "../shared/format.js";
+import { fmt, esc, niceScale, stepDigits, cssValue } from "../shared/format.js";
 import { registerCard } from "../shared/register.js";
 
 const ECC_METRICS = {
@@ -40,7 +40,7 @@ class EbikeCompareCard extends HTMLElement {
     if (!Array.isArray(config.bikes) || !config.bikes.length) {
       throw new Error("Bitte unter 'bikes' mindestens ein Bike mit name und prefix angeben");
     }
-    this._config = { title: "Vergleich", sort: true, layout: "vertical", height: 170, show_scale: true, ...config };
+    this._config = { title: "Vergleich", sort: true, layout: "vertical", height: 170, show_scale: true, ...config, background: cssValue(config.background) };
     const overrides = config.suffixes || {};
     this._defs = {};
     for (const [k, m] of Object.entries(ECC_METRICS)) {
@@ -101,7 +101,7 @@ class EbikeCompareCard extends HTMLElement {
     const rows = cfg.bikes.map((b, i) => ({
       name: b.name || b.prefix,
       short: b.short_name || b.name || b.prefix,
-      color: b.color || PALETTE[i % PALETTE.length],
+      color: cssValue(b.color) || PALETTE[i % PALETTE.length],
       v: this._metricValue(b.prefix, def),
     }));
     if (cfg.sort !== false) {
