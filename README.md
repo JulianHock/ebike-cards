@@ -9,7 +9,6 @@ Dashboard-Karten für Home Assistant, die die Daten der [ha-bosch-ebike](https:/
 | Tricks | `custom:ebike-tricks-card` | alle Touren (Websocket) |
 | Letzte Tour | `custom:ebike-last-ride-card` | „Letzte Fahrt“-Sensoren |
 | Bestwerte | `custom:ebike-records-card` | alle Touren (Websocket) |
-| Reichweite | `custom:ebike-range-card` | „Reachable Range“-Sensoren je Modus |
 | Jahresziel | `custom:ebike-goal-card` | alle Touren (Websocket) |
 
 Alle Karten stecken in einer Datei (`ebike-cards.js`). In HA braucht man also nur eine Ressource.
@@ -59,7 +58,7 @@ Die Kartenkonfiguration kennt **Bikes** auf zwei Wegen:
 - `prefix`: der Entitäts-Präfix der Sensoren, z. B. `e_bike_trekking` für `sensor.e_bike_trekking_kilometerstand`
 - `bike`: alternativ der Gerätename oder die Bike-ID aus der Integration (nur Tricks und Bestwerte)
 
-Unter den Säulen von Vergleich und Reichweite brechen lange Namen auf zwei Zeilen um und werden erst danach gekürzt.
+Unter den Säulen des Vergleichs brechen lange Namen auf zwei Zeilen um und werden erst danach gekürzt.
 Reicht der Platz trotzdem nicht, setzt `short_name` einen kürzeren Namen für die Achse; der Tooltip zeigt weiter `name`:
 
 ```yaml
@@ -153,24 +152,6 @@ bike: Trekking
 records: [distance, up, ride_time, max_speed, avg_speed, calories]
 min_avg_km: 5            # Mindeststrecke für "Schnellster Schnitt"
 ```
-
-### Reichweite
-
-```yaml
-type: custom:ebike-range-card
-title: Reichweite nach Modus
-bikes:
-  - { name: Trekking, prefix: e_bike_trekking }
-  - { name: MTB, prefix: e_bike_mtb }
-modes: [Eco, Tour, eMTB, Turbo]   # optional: Auswahl und Reihenfolge
-colors: { Eco: "#4caf50" }        # optional: eigene Farbe je Modus
-height: 170
-show_scale: true
-```
-
-Die Karte zeigt die aktuelle Restreichweite je Bike und Unterstützungsmodus aus den Sensoren „Reachable Range …“ der Integration.
-Welche Modi es gibt, hängt vom Motor ab. Ohne `modes` erscheinen alle vorhandenen Modi, sortiert von sparsam bis kräftig (Eco grün … Turbo rot).
-Ein Klick auf einen Modus in der Legende blendet ihn aus bzw. wieder ein.
 
 ### Jahresziel
 
