@@ -254,7 +254,6 @@ class EbikeLastRideCard extends HTMLElement {
                font-size: 12.5px; padding: 6px 10px; border-radius: 999px; background: var(--chip); color: var(--sub); }
         .tab.on { background: color-mix(in srgb, var(--c) 22%, transparent); color: var(--primary-text-color);
                   font-weight: 600; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 60%, transparent); }
-        .tile { border-radius: 14px; padding: 10px 12px 12px; background: rgba(127,127,127,.07); }
         .top { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
         .dot { width: 9px; height: 9px; border-radius: 3px; flex: none; display: inline-block; background: var(--c); }
         .when { font-size: 13px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; flex: none; }
