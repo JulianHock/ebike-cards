@@ -49,7 +49,7 @@
     import("../dist/ebike-cards.js").then(async () => {
       const { hass, bikes } = await import("./mock-hass.js");
       const configs = [
-        { type: "ebike-stats-pro-card" },
+        { type: "ebike-stats-pro-card", show_totals: false },
         { type: "ebike-compare-card", bikes },
         { type: "ebike-tricks-card", bikes },
         { type: "ebike-last-ride-card", bikes },

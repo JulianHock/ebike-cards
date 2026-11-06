@@ -13,6 +13,8 @@ Dashboard-Karten für Home Assistant, die die Daten der [ha-bosch-ebike](https:/
 
 Alle Karten stecken in einer Datei (`ebike-cards.js`). In HA braucht man also nur eine Ressource.
 
+Die Screenshots unter [Konfiguration](#konfiguration) stammen aus der Demo und zeigen erfundene Daten.
+
 ## Installation über HACS
 
 1. HACS → ⋮ → **Benutzerdefinierte Repositories**
@@ -62,10 +64,16 @@ Unter den Säulen des Vergleichs brechen lange Namen auf zwei Zeilen um und werd
 Reicht der Platz trotzdem nicht, setzt `short_name` einen kürzeren Namen für die Achse; der Tooltip zeigt weiter `name`:
 
 ```yaml
-  - { name: Andreas E-MTB, short_name: Andr. MTB, prefix: e_mtb_andreas }
+  - { name: Erika E-MTB, short_name: Erika MTB, prefix: e_mtb_erika }
 ```
 
 ### Fahrstatistik
+
+<table><tr><td width="360">
+
+![Fahrstatistik](docs/images/fahrstatistik.png)
+
+</td></tr></table>
 
 ```yaml
 type: custom:ebike-stats-pro-card
@@ -87,6 +95,12 @@ refresh_minutes: 15
 Die Bikes kommen automatisch aus der Integration. `names`, `colors` und `order` verweisen auf das Label oder die ID eines Bikes.
 
 ### Vergleich
+
+<table><tr><td width="360">
+
+![Vergleich](docs/images/vergleich.png)
+
+</td></tr></table>
 
 ```yaml
 type: custom:ebike-compare-card
@@ -110,6 +124,12 @@ suffixes:                # optional: abweichende Sensor-Endungen
 
 ### Tricks
 
+<table><tr><td width="360">
+
+![Tricks](docs/images/tricks.png)
+
+</td></tr></table>
+
 ```yaml
 type: custom:ebike-tricks-card
 title: Tricks
@@ -124,6 +144,12 @@ show_leader: false
 Die Karte summiert Wheelies, Manuals, Stoppies und Jumps über alle Touren. Unter jedem Bestwert steht die Tour, in der er erreicht wurde.
 
 ### Letzte Tour
+
+<table><tr><td width="360">
+
+![Letzte Tour](docs/images/letzte-tour.png)
+
+</td></tr></table>
 
 ```yaml
 type: custom:ebike-last-ride-card
@@ -142,6 +168,12 @@ Fehlt der Eintrag dort, sucht sie über die üblichen deutschen Entitäts-IDs.
 
 ### Bestwerte
 
+<table><tr><td width="360">
+
+![Bestwerte](docs/images/bestwerte.png)
+
+</td></tr></table>
+
 ```yaml
 type: custom:ebike-records-card
 title: Bestwerte
@@ -154,6 +186,12 @@ min_avg_km: 5            # Mindeststrecke für "Schnellster Schnitt"
 ```
 
 ### Jahresziel
+
+<table><tr><td width="360">
+
+![Jahresziel](docs/images/jahresziel.png)
+
+</td></tr></table>
 
 ```yaml
 type: custom:ebike-goal-card
