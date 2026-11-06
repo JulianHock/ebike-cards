@@ -64,6 +64,7 @@ function makeStates() {
     set(`${p}_letzte_fahrt_max_geschwindigkeit`, 34.2);
     set(`${p}_letzte_fahrt_hohenmeter`, 310 + i * 200);
     set(`${p}_letzte_fahrt_hohenmeter_2`, 305 + i * 200);
+    set(`${p}_last_ride_max_altitude`, 438 + i * 120);
     set(`${p}_letzte_fahrt_kalorien`, 640);
     set(`${p}_letzte_fahrt_o_trittfrequenz`, 72);
     set(`${p}_letzte_fahrt_max_trittfrequenz`, 104);

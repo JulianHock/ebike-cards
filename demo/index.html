@@ -4,16 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>eBike Cards Demo</title>
+  <!-- HA bringt Roboto selbst mit; ohne diese Schrift liefen Texte in der Demo anders -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap">
   <style>
     :root {
-      --primary-text-color: #e1e1e1; --secondary-text-color: #9e9e9e;
+      /* Standardwerte des dunklen HA-Themes */
+      --primary-text-color: #e1e1e1; --secondary-text-color: #9b9b9b;
       --primary-color: #03a9f4; --card-background-color: #1c1c1c;
+      --divider-color: rgba(225, 225, 225, .12);
+      --demo-card-width: 360px; /* etwa eine HA-Spalte auf dem Handy */
     }
-    body { margin: 0; padding: 16px; background: #111; font-family: Roboto, system-ui, sans-serif;
+    body { margin: 0; padding: 16px; background: #111; font-family: Roboto, Noto, sans-serif;
            color: var(--primary-text-color); }
-    main { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr)); gap: 16px;
-           max-width: 1200px; margin: 0 auto; align-items: start; }
-    ha-card { display: block; background: var(--card-background-color); }
+    main { display: grid; gap: 16px; justify-content: center; align-items: start;
+           grid-template-columns: repeat(auto-fill, minmax(0, var(--demo-card-width))); }
     ha-icon { display: inline-block; width: 16px; height: 16px; }
   </style>
 </head>
@@ -21,9 +25,24 @@
   <main id="cards"></main>
   <script type="module">
     // Platzhalter für die HA-Elemente, die die Karten verwenden
-    // ha-card ist in HA ein Block-Element; ohne das läge das Kartenpadding falsch
+    // ha-card liegt im Shadow DOM der Karten, Seiten-CSS erreicht es nicht. Daher bringt der
+    // Platzhalter wie das Original seine Styles über :host mit (Hintergrund, Rahmen, Ecken).
     customElements.define("ha-card", class extends HTMLElement {
-      connectedCallback() { this.style.display = "block"; }
+      constructor() {
+        super();
+        this.attachShadow({ mode: "open" }).innerHTML = `
+          <style>
+            :host {
+              display: block; position: relative; box-sizing: border-box;
+              background: var(--ha-card-background, var(--card-background-color));
+              box-shadow: var(--ha-card-box-shadow, none);
+              border-radius: var(--ha-card-border-radius, 12px);
+              border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color));
+              color: var(--primary-text-color);
+            }
+          </style>
+          <slot></slot>`;
+      }
     });
     customElements.define("ha-icon", class extends HTMLElement {});
 

@@ -261,8 +261,10 @@ class EbikeLastRideCard extends HTMLElement {
         .rtitle { font-size: 12.5px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
                   min-width: 0; }
         .rtitle::before { content: "·"; margin-right: 8px; }
-        .heroes { display: grid; gap: 6px; margin-top: 9px; }
+        .heroes { display: grid; gap: 6px; margin-top: 9px; padding: 0 5px; }
         .hero { min-width: 0; }
+        .hero:nth-child(2) { text-align: center; }
+        .hero:last-child { text-align: right; }
         .hv { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap;
               overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
         .hv small { font-size: 11px; font-weight: 500; color: var(--sub); margin-left: 3px; }
