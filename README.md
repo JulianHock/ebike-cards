@@ -1,29 +1,29 @@
 # eBike Cards
 
-Dashboard-Karten für Home Assistant, die die Daten der [ha-bosch-ebike](https://github.com/Xunil99/ha-bosch-ebike) Integration darstellen.
+Dashboard cards for Home Assistant that display the data of the [ha-bosch-ebike](https://github.com/Xunil99/ha-bosch-ebike) integration.
 
-| Karte | Typ | Datenquelle |
+| Card | Type | Data source |
 |---|---|---|
-| Fahrstatistik | `custom:ebike-stats-pro-card` | alle Touren (Websocket) |
-| Vergleich | `custom:ebike-compare-card` | Gesamt-Sensoren je Bike |
-| Tricks | `custom:ebike-tricks-card` | alle Touren (Websocket) |
-| Letzte Tour | `custom:ebike-last-ride-card` | „Letzte Fahrt“-Sensoren |
-| Bestwerte | `custom:ebike-records-card` | alle Touren (Websocket) |
-| Jahresziel | `custom:ebike-goal-card` | alle Touren (Websocket) |
+| Ride statistics | `custom:ebike-stats-pro-card` | all rides (websocket) |
+| Comparison | `custom:ebike-compare-card` | total sensors per bike |
+| Tricks | `custom:ebike-tricks-card` | all rides (websocket) |
+| Last ride | `custom:ebike-last-ride-card` | "last ride" sensors |
+| Records | `custom:ebike-records-card` | all rides (websocket) |
+| Annual goal | `custom:ebike-goal-card` | all rides (websocket) |
 
-Alle Karten stecken in einer Datei (`ebike-cards.js`). In HA braucht man also nur eine Ressource.
+All cards live in a single file (`ebike-cards.js`), so HA only needs one resource.
 
-Die Screenshots unter [Konfiguration](#konfiguration) stammen aus der Demo und zeigen erfundene Daten.
+The screenshots under [Configuration](#configuration) come from the demo and show made-up data. The card labels are in German.
 
-## Installation über HACS
+## Installation via HACS
 
-1. HACS → ⋮ → **Benutzerdefinierte Repositories**
-   Repository: `https://github.com/JulianHock/ebike-cards`, Typ: **Dashboard**
-2. „eBike Cards“ in HACS suchen und **herunterladen**
-3. Browser neu laden (bei Bedarf den Cache leeren)
+1. HACS → ⋮ → **Custom repositories**
+   Repository: `https://github.com/JulianHock/ebike-cards`, type: **Dashboard**
+2. Search for "eBike Cards" in HACS and **download** it
+3. Reload the browser (clear the cache if needed)
 
-HACS trägt die Ressource `/hacsfiles/ebike-cards/ebike-cards.js` selbst ein, wenn die Dashboards im UI-Modus verwaltet werden.
-Im YAML-Modus trägst du sie selbst ein:
+HACS adds the resource `/hacsfiles/ebike-cards/ebike-cards.js` itself if your dashboards are managed in UI mode.
+In YAML mode, add it yourself:
 
 ```yaml
 lovelace:
@@ -32,46 +32,46 @@ lovelace:
       type: module
 ```
 
-Updates erscheinen in HA unter **Einstellungen → Updates**, sobald ein neues Release veröffentlicht ist.
+Updates appear in HA under **Settings → Updates** as soon as a new release is published.
 
-### Umstieg von der manuell kopierten Datei
+### Switching from a manually copied file
 
-Wenn die Karten bisher als einzelne Datei unter `/config/www/` lagen:
+If the cards used to be a single file in `/config/www/`:
 
-1. Unter **Einstellungen → Dashboards → ⋮ → Ressourcen** die alte Ressource (`/local/….js`) löschen
-2. Die alte Datei aus `/config/www/` entfernen
-3. Browser neu laden
+1. Under **Settings → Dashboards → ⋮ → Resources**, delete the old resource (`/local/….js`)
+2. Remove the old file from `/config/www/`
+3. Reload the browser
 
-Die Kartenkonfigurationen bleiben unverändert, denn die Kartentypen sind dieselben.
+Your card configurations stay as they are, because the card types are the same.
 
-## Konfiguration
+## Configuration
 
-Für alle Karten gilt:
+These options apply to all cards:
 
-| Option | Bedeutung |
+| Option | Meaning |
 |---|---|
-| `title` | Überschrift der Karte |
-| `background` | eigener Hintergrund (jede CSS-Farbe); ohne Angabe gilt der Kartenhintergrund des Themes |
+| `title` | Card heading |
+| `background` | Custom background (any CSS color); defaults to the theme's card background |
 
-Die Karten merken sich die gewählten Reiter je Browser (localStorage, Schlüssel enthält den Titel).
+The cards remember the selected tabs per browser (localStorage, the key includes the title).
 
-Die Kartenkonfiguration kennt **Bikes** auf zwei Wegen:
+The card configuration identifies **bikes** in two ways:
 
-- `prefix`: der Entitäts-Präfix der Sensoren, z. B. `e_bike_trekking` für `sensor.e_bike_trekking_kilometerstand`
-- `bike`: alternativ der Gerätename oder die Bike-ID aus der Integration (nur Tricks und Bestwerte)
+- `prefix`: the entity prefix of the sensors, e.g. `e_bike_trekking` for `sensor.e_bike_trekking_kilometerstand`
+- `bike`: alternatively the device name or the bike ID from the integration (Tricks and Records only)
 
-Unter den Säulen des Vergleichs brechen lange Namen auf zwei Zeilen um und werden erst danach gekürzt.
-Reicht der Platz trotzdem nicht, setzt `short_name` einen kürzeren Namen für die Achse; der Tooltip zeigt weiter `name`:
+Below the columns of the comparison, long names wrap onto two lines and are only truncated after that.
+If there still isn't enough room, `short_name` sets a shorter name for the axis; the tooltip keeps showing `name`:
 
 ```yaml
   - { name: Erika E-MTB, short_name: Erika MTB, prefix: e_mtb_erika }
 ```
 
-### Fahrstatistik
+### Ride statistics
 
 <table><tr><td width="360">
 
-![Fahrstatistik](docs/images/fahrstatistik.png)
+![Ride statistics](docs/images/fahrstatistik.png)
 
 </td></tr></table>
 
@@ -79,26 +79,26 @@ Reicht der Platz trotzdem nicht, setzt `short_name` einen kürzeren Namen für d
 type: custom:ebike-stats-pro-card
 title: Fahrstatistik
 period: month            # week | month | year
-metric: distance         # Start-Reiter
+metric: distance         # initial tab
 metrics: [distance, elevation, rides, duration, speed, calories]
 stacked: true
-show_totals: true        # false blendet alle Summen über alle Bikes aus
-legend_values: false     # true zeigt in der Legende die Summe je Bike im Zeitraum
+show_totals: true        # false hides all totals across bikes
+legend_values: false     # true shows each bike's total for the period in the legend
 height: 220
-hide_unassigned: false   # Touren ohne Bike-Zuordnung ausblenden
+hide_unassigned: false   # hide rides that aren't assigned to a bike
 names:  { "E-Bike Trekking": Trekking }
 colors: { "E-Bike Trekking": "#03a9f4" }
 order: [Trekking, MTB]
 refresh_minutes: 15
 ```
 
-Die Bikes kommen automatisch aus der Integration. `names`, `colors` und `order` verweisen auf das Label oder die ID eines Bikes.
+The bikes come from the integration automatically. `names`, `colors` and `order` refer to a bike's label or ID.
 
-### Vergleich
+### Comparison
 
 <table><tr><td width="360">
 
-![Vergleich](docs/images/vergleich.png)
+![Comparison](docs/images/vergleich.png)
 
 </td></tr></table>
 
@@ -113,14 +113,14 @@ layout: vertical         # vertical | horizontal
 height: 170
 sort: true
 show_scale: true
-show_leader: false       # Pokal beim Spitzenreiter
-suffixes:                # optional: abweichende Sensor-Endungen
+show_leader: false       # trophy for the leader
+suffixes:                # optional: different sensor suffixes
   odometer: kilometerstand
 ```
 
-- `energy` ist die vom Akku abgegebene Energie in kWh.
-- `efficiency` ist der Verbrauch in Wh/km; der sparsamste Wert steht zuerst.
-- Eine Endung mit `*` (z. B. `*_charge_cycles`) summiert alle passenden Sensoren eines Bikes.
+- `energy` is the energy delivered by the battery in kWh.
+- `efficiency` is the consumption in Wh/km; the most economical value comes first.
+- A suffix with `*` (e.g. `*_charge_cycles`) adds up all matching sensors of a bike.
 
 ### Tricks
 
@@ -135,19 +135,19 @@ type: custom:ebike-tricks-card
 title: Tricks
 bikes:
   - { name: MTB, prefix: e_bike_mtb }
-trick: jump              # Start-Reiter
+trick: jump              # initial tab
 tricks: [jump, wheelie, manual, stoppie]
 sort: true
 show_leader: false
 ```
 
-Die Karte summiert Wheelies, Manuals, Stoppies und Jumps über alle Touren. Unter jedem Bestwert steht die Tour, in der er erreicht wurde.
+The card adds up wheelies, manuals, stoppies and jumps across all rides. Each record shows the ride in which it was set.
 
-### Letzte Tour
+### Last ride
 
 <table><tr><td width="360">
 
-![Letzte Tour](docs/images/letzte-tour.png)
+![Last ride](docs/images/letzte-tour.png)
 
 </td></tr></table>
 
@@ -157,20 +157,20 @@ title: Letzte Tour
 bikes:
   - { name: Trekking, prefix: e_bike_trekking }
   - { name: MTB, prefix: e_bike_mtb }
-bike: Trekking           # Start-Bike; sonst das mit der neuesten Tour
+bike: Trekking           # initial bike; otherwise the one with the latest ride
 show_title: true
 fields: [duration, pauses, avg_speed, max_speed, up, down, max_alt,
          avg_power, max_power, avg_cadence, max_cadence, calories, tricks]
 ```
 
-Die Karte findet die Sensoren über das Geräte-Register (`translation_key`), unabhängig von Sprache und Umbenennungen.
-Fehlt der Eintrag dort, sucht sie über die üblichen deutschen Entitäts-IDs.
+The card finds the sensors through the device registry (`translation_key`), regardless of language and renames.
+If they aren't in the registry, it falls back to the usual German entity IDs.
 
-### Bestwerte
+### Records
 
 <table><tr><td width="360">
 
-![Bestwerte](docs/images/bestwerte.png)
+![Records](docs/images/bestwerte.png)
 
 </td></tr></table>
 
@@ -182,14 +182,14 @@ bikes:
   - { name: MTB, prefix: e_bike_mtb }
 bike: Trekking
 records: [distance, up, ride_time, max_speed, avg_speed, calories]
-min_avg_km: 5            # Mindeststrecke für "Schnellster Schnitt"
+min_avg_km: 5            # minimum distance for "Schnellster Schnitt" (fastest average)
 ```
 
-### Jahresziel
+### Annual goal
 
 <table><tr><td width="360">
 
-![Jahresziel](docs/images/jahresziel.png)
+![Annual goal](docs/images/jahresziel.png)
 
 </td></tr></table>
 
@@ -197,55 +197,55 @@ min_avg_km: 5            # Mindeststrecke für "Schnellster Schnitt"
 type: custom:ebike-goal-card
 title: Jahresziel
 bikes:
-  - { name: Trekking, prefix: e_bike_trekking, goal: 3000 }   # goal: Ziel in km für das laufende Jahr
+  - { name: Trekking, prefix: e_bike_trekking, goal: 3000 }   # goal: target in km for the current year
   - { name: MTB, prefix: e_bike_mtb, goal: 1500 }
-bike: Trekking           # Start-Bike; sonst das erste
-show_last_year: true     # Vorjahr als graue Linie
+bike: Trekking           # initial bike; otherwise the first one
+show_last_year: true     # previous year as a gray line
 height: 180
 ```
 
-Jedes Bike hat sein eigenes Ziel; oben wählst du das Bike aus, die Auswahl merkt sich die Karte je Browser.
-Das Diagramm zeigt die kumulierten Kilometer des Jahres gegen die Ziellinie (gleichmäßiges Tempo bis 31.12.) und das Vorjahr.
-Darunter: Anteil am Ziel, Vorsprung oder Rückstand gegenüber dem Plan und die nötigen km je Woche für den Rest des Jahres.
+Each bike has its own goal. You pick the bike at the top, and the card remembers the selection per browser.
+The chart shows the year's cumulative kilometers against the goal line (a steady pace until December 31) and the previous year.
+Below it: the share of the goal, how far ahead of or behind plan you are, and the km per week needed for the rest of the year.
 
-## Entwicklung
+## Development
 
 ```
 src/
-  index.js              Einstiegspunkt, importiert alle Karten
-  cards/*.js            je eine Datei pro Karte
-  shared/*.js           gemeinsame Helfer (Formatierung, Zeit, Websocket, Registrierung)
-demo/                   Testseite mit erfundenen Daten
+  index.js              entry point, imports all cards
+  cards/*.js            one file per card
+  shared/*.js           shared helpers (formatting, time, websocket, registration)
+demo/                   test page with made-up data
 build.mjs               esbuild → dist/ebike-cards.js
 ```
 
 ```bash
 npm install
-npm run build   # dist/ebike-cards.js bauen
-npm run demo    # Demo unter http://localhost:8000/demo/, baut bei Änderungen neu
+npm run build   # build dist/ebike-cards.js
+npm run demo    # demo at http://localhost:8000/demo/, rebuilds on changes
 ```
 
-### Branches und Releases
+### Branches and releases
 
-- `main` enthält den veröffentlichten Stand. Releases entstehen nur von hier.
-- `dev` ist der Arbeitsstand. CI baut jeden Push und prüft die HACS-Struktur.
+- `main` holds the published state. Releases are only made from here.
+- `dev` is the working state. CI builds every push and checks the HACS structure.
 
-Ein Release:
+To make a release:
 
 ```bash
 git checkout main && git merge dev
-npm version minor            # oder patch / major: setzt Version, Commit und Tag
+npm version minor            # or patch / major: sets the version, commit and tag
 git push --follow-tags
 ```
 
-Der Tag löst den Release-Workflow aus. Er baut `ebike-cards.js` und hängt die Datei an ein GitHub-Release.
-Danach bietet HACS das Update an.
+The tag triggers the release workflow. It builds `ebike-cards.js` and attaches the file to a GitHub release.
+HACS then offers the update.
 
-Für eine Testversion auf `dev`:
+For a test version on `dev`:
 
 ```bash
-npm version prerelease --preid beta   # z. B. v1.16.0-beta.0
+npm version prerelease --preid beta   # e.g. v1.16.0-beta.0
 git push --follow-tags
 ```
 
-Das erzeugt ein Pre-Release. In HACS siehst du es, wenn du beim Repository „Beta-Versionen anzeigen“ aktivierst.
+This creates a pre-release. You can see it in HACS if you enable "Show beta versions" for the repository.
