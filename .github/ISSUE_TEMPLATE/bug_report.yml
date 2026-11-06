@@ -1,0 +1,60 @@
+name: Bug report
+description: A card shows wrong data, breaks or looks wrong
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Please remove personal data such as names, locations and tokens from everything you post here.
+  - type: dropdown
+    id: card
+    attributes:
+      label: Card
+      options:
+        - Ride statistics
+        - Comparison
+        - Tricks
+        - Last ride
+        - Records
+        - Annual goal
+        - All cards
+    validations:
+      required: true
+  - type: input
+    id: card-version
+    attributes:
+      label: eBike Cards version
+      description: Shown in the browser console, or in HACS
+      placeholder: 1.18.2
+    validations:
+      required: true
+  - type: input
+    id: ha-version
+    attributes:
+      label: Home Assistant version
+      placeholder: 2026.11.0
+    validations:
+      required: true
+  - type: input
+    id: integration-version
+    attributes:
+      label: ha-bosch-ebike version
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Card configuration
+      description: The YAML of the affected card
+      render: yaml
+  - type: textarea
+    id: logs
+    attributes:
+      label: Browser console errors
+      render: text

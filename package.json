@@ -3,10 +3,12 @@
   "version": "1.18.2",
   "description": "Home Assistant dashboard cards for the ha-bosch-ebike integration",
   "homepage": "https://github.com/JulianHock/ebike-cards",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
+    "test": "node --test",
     "watch": "node build.mjs --watch",
     "demo": "node build.mjs --serve"
   },

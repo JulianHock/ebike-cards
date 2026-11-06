@@ -1,5 +1,6 @@
 {
   "name": "eBike Cards",
   "filename": "ebike-cards.js",
-  "render_readme": true
+  "hide_default_branch": true,
+  "homeassistant": "2024.1.0"
 }

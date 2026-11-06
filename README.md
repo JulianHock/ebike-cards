@@ -51,7 +51,7 @@ These options apply to all cards:
 | Option | Meaning |
 |---|---|
 | `title` | Card heading |
-| `background` | Custom background (any CSS color); defaults to the theme's card background |
+| `background` | Custom background (any CSS color, variable or gradient; `url()` is ignored); defaults to the theme's card background |
 
 The cards remember the selected tabs per browser (localStorage, the key includes the title).
 
@@ -223,11 +223,12 @@ build.mjs               esbuild → dist/ebike-cards.js
 npm install
 npm run build   # build dist/ebike-cards.js
 npm run demo    # demo at http://localhost:8000/demo/, rebuilds on changes
+npm test        # unit tests
 ```
 
 ### Branches and releases
 
-- `main` holds the published state. Releases are only made from here.
+- `main` holds the published state. Final releases are only made from here; the release workflow rejects other tags.
 - `dev` is the working state. CI builds every push and checks the HACS structure.
 
 To make a release:
@@ -249,3 +250,7 @@ git push --follow-tags
 ```
 
 This creates a pre-release. You can see it in HACS if you enable "Show beta versions" for the repository.
+
+## License
+
+[MIT](LICENSE)
