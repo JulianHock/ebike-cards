@@ -361,13 +361,27 @@ class EbikeStatsProCard extends HTMLElement {
     });
     root.addEventListener("pointermove", (ev) => {
       const hit = ev.target.closest?.(".hit");
-      if (hit) this._showTip(Number(hit.dataset.i));
+      if (!hit) return;
+      const i = Number(hit.dataset.i);
+      if (i !== this._hover) this._tapClose = false;
+      this._showTip(i);
     });
     root.addEventListener("pointerdown", (ev) => {
       const hit = ev.target.closest?.(".hit");
-      if (hit) this._showTip(Number(hit.dataset.i));
-      else if (!ev.target.closest?.(".tip")) this._hideTip();
+      if (!hit) {
+        if (!ev.target.closest?.(".tip")) this._hideTip();
+        return;
+      }
+      const i = Number(hit.dataset.i);
+      // Touch: erneutes Antippen desselben Balkens schließt den Tooltip beim Loslassen
+      this._tapClose = ev.pointerType !== "mouse" && i === this._hover;
+      this._showTip(i);
     });
+    root.addEventListener("pointerup", () => {
+      if (this._tapClose) this._hideTip();
+      this._tapClose = false;
+    });
+    root.addEventListener("pointercancel", () => { this._tapClose = false; });
     root.addEventListener("pointerout", (ev) => {
       if (ev.pointerType !== "mouse") return;
       const chart = root.querySelector(".chart");

@@ -278,13 +278,24 @@ class EbikeCompareCard extends HTMLElement {
       });
       root.addEventListener("pointermove", (ev) => {
         const col = ev.target.closest?.(".col");
-        if (col) this._showTip(Number(col.dataset.i));
+        if (!col) return;
+        const i = Number(col.dataset.i);
+        if (i !== this._hover) this._tapClose = false;
+        this._showTip(i);
       });
       root.addEventListener("pointerdown", (ev) => {
         const col = ev.target.closest?.(".col");
-        if (col) this._showTip(Number(col.dataset.i));
-        else this._hideTip();
+        if (!col) { this._hideTip(); return; }
+        const i = Number(col.dataset.i);
+        // Touch: erneutes Antippen derselben Säule schließt den Tooltip beim Loslassen
+        this._tapClose = ev.pointerType !== "mouse" && i === this._hover;
+        this._showTip(i);
       });
+      root.addEventListener("pointerup", () => {
+        if (this._tapClose) this._hideTip();
+        this._tapClose = false;
+      });
+      root.addEventListener("pointercancel", () => { this._tapClose = false; });
       root.addEventListener("pointerout", (ev) => {
         if (ev.pointerType !== "mouse") return;
         const chart = root.querySelector(".plot");
