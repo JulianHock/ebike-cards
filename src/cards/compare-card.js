@@ -14,17 +14,18 @@ import { fmt, esc, niceScale, stepDigits, cssValue } from "../shared/format.js";
 import { registerCard } from "../shared/register.js";
 import { findBikeDevice, deviceSensors } from "../shared/bosch.js";
 
-// tk: translation_key der Integration (unabhängig von Sprache und Umbenennungen);
-// suffix: Ende der Entitäts-ID, wenn es keinen translation_key gibt oder er nicht gefunden wird
+// tk: translation_key der Integration (unabhängig von Sprache und Umbenennungen; mehrere Treffer,
+//     z. B. zwei Akkus, werden addiert); suffix: Ende der Entitäts-ID, wenn der translation_key fehlt
+//     (die Akku-Schlüssel gibt es erst ab ha-bosch-ebike 1.19.65)
 const ECC_METRICS = {
   odometer:  { tk: "odometer",             suffix: "kilometerstand",    label: "Kilometer",  unit: "km",   digits: 0, icon: "mdi:map-marker-distance" },
   elevation: { tk: "total_elevation_gain", suffix: "hohenmeter_gesamt", label: "Höhenmeter", unit: "m",    digits: 0, icon: "mdi:image-filter-hdr" },
   rides:     { tk: "total_rides",          suffix: "touren_gesamt",     label: "Touren",     unit: "",     digits: 0, icon: "mdi:flag-checkered" },
   duration:  { tk: "total_duration",       suffix: "fahrzeit_gesamt",   label: "Fahrzeit",   unit: "h",    digits: 1, icon: "mdi:timer-outline" },
-  cycles:    { suffix: "*_charge_cycles",   label: "Ladezyklen", unit: "",     digits: 1, icon: "mdi:battery-sync" },
+  cycles:    { tk: "battery_charge_cycles", suffix: "*_charge_cycles", label: "Ladezyklen", unit: "",   digits: 1, icon: "mdi:battery-sync" },
   calories:  { tk: "total_calories",       suffix: "kalorien_gesamt",   label: "Kalorien",   unit: "kcal", digits: 0, icon: "mdi:fire" },
   // Vom Akku abgegebene Energie über seine Lebensdauer (Bosch-Zähler, in Wh) → kWh
-  energy:    { suffix: "*_wh_lifetime",     label: "Energie",    unit: "kWh",  digits: 2, scale: 0.001, icon: "mdi:lightning-bolt" },
+  energy:    { tk: "battery_wh_lifetime",  suffix: "*_wh_lifetime",     label: "Energie",    unit: "kWh",  digits: 2, scale: 0.001, icon: "mdi:lightning-bolt" },
   // Energie gesamt / Kilometerstand – beides Zähler direkt vom Bike; kleiner ist sparsamer
   efficiency: { calc: true,                 label: "Verbrauch",  unit: "Wh/km", digits: 1, lower_better: true, icon: "mdi:gauge" },
 };
@@ -84,7 +85,7 @@ class EbikeCompareCard extends HTMLElement {
   _value(s, def) {
     const states = this._hass?.states || {};
     let ids;
-    if (def.tk && s.byTk[def.tk]) ids = [s.byTk[def.tk]];
+    if (def.tk && s.byTk[def.tk]) ids = s.byTk[def.tk];
     else if (def.suffix.startsWith("*")) {
       const pool = s.ids.length ? s.ids : Object.keys(states).filter((k) => k.startsWith(`sensor.${s.prefix}_`));
       ids = pool.filter((k) => k.endsWith(def.suffix.slice(1)));

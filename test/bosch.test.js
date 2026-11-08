@@ -67,9 +67,19 @@ test("findBikeDevice ignores ambiguous device names", () => {
 test("deviceSensors lists sensors and translation keys of one device", () => {
   assert.deepEqual(deviceSensors(hass, "d2"), {
     ids: ["sensor.drive_unit_cx_odometer", "sensor.drive_unit_cx_total_rides"],
-    byTk: { odometer: "sensor.drive_unit_cx_odometer", total_rides: "sensor.drive_unit_cx_total_rides" },
+    byTk: { odometer: ["sensor.drive_unit_cx_odometer"], total_rides: ["sensor.drive_unit_cx_total_rides"] },
   });
   assert.deepEqual(deviceSensors(hass, null), { ids: [], byTk: {} });
+});
+
+test("deviceSensors keeps every sensor that shares a translation key", () => {
+  const twoBatteries = { entities: {
+    "sensor.mtb_powertube_800_wh_lifetime": { device_id: "d1", translation_key: "battery_wh_lifetime" },
+    "sensor.mtb_powermore_250_wh_lifetime": { device_id: "d1", translation_key: "battery_wh_lifetime" },
+  } };
+  assert.deepEqual(deviceSensors(twoBatteries, "d1").byTk, {
+    battery_wh_lifetime: ["sensor.mtb_powertube_800_wh_lifetime", "sensor.mtb_powermore_250_wh_lifetime"],
+  });
 });
 
 test("resolveBikeId finds the bike through the prefix's device", () => {

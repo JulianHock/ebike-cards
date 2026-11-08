@@ -44,7 +44,8 @@ export function findBikeDevice(hass, cfgBike) {
   return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 }
 
-// Sensoren eines Geräts: alle Entitäts-IDs und die Zuordnung translation_key → Entitäts-ID
+// Sensoren eines Geräts: alle Entitäts-IDs und die Zuordnung translation_key → Entitäts-IDs
+// (eine Liste, weil z. B. bei zwei Akkus beide Sensoren denselben translation_key tragen)
 export function deviceSensors(hass, deviceId) {
   const ids = [];
   const byTk = {};
@@ -52,7 +53,7 @@ export function deviceSensors(hass, deviceId) {
   for (const [eid, e] of Object.entries(hass?.entities || {})) {
     if (e?.device_id !== deviceId || !eid.startsWith("sensor.")) continue;
     ids.push(eid);
-    if (e.translation_key) byTk[e.translation_key] = eid;
+    if (e.translation_key) (byTk[e.translation_key] ||= []).push(eid);
   }
   return { ids, byTk };
 }

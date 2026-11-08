@@ -32,8 +32,8 @@ const ELR_SENSORS = {
   avg_speed:   { tk: "last_ride_avg_speed",       slug: "letzte_fahrt_o_geschwindigkeit" },
   max_speed:   { tk: "last_ride_max_speed",       slug: "letzte_fahrt_max_geschwindigkeit" },
   up:          { tk: "last_ride_elevation_gain",  slug: "letzte_fahrt_hohenmeter" },
-  // Ohne translation_key in der Integration – wird über das Ende der Entitäts-ID gefunden
-  max_alt:     { tk: null,                        slug: "last_ride_max_altitude" },
+  // translation_key erst ab ha-bosch-ebike 1.19.65, davor über das Ende der Entitäts-ID
+  max_alt:     { tk: "last_ride_max_altitude",    slug: "last_ride_max_altitude", end: true },
   down:        { tk: "last_ride_elevation_loss",  slug: "letzte_fahrt_hohenmeter_2" },
   calories:    { tk: "last_ride_calories",        slug: "letzte_fahrt_kalorien" },
   avg_cadence: { tk: "last_ride_avg_cadence",     slug: "letzte_fahrt_o_trittfrequenz" },
@@ -102,13 +102,12 @@ class EbikeLastRideCard extends HTMLElement {
     const out = {};
     const { ids, byTk } = deviceSensors(this._hass, findBikeDevice(this._hass, b));
     for (const [k, d] of Object.entries(ELR_SENSORS)) {
-      if (d.tk && byTk[d.tk]) out[k] = byTk[d.tk];
-      else if (!d.tk) {
-        const hit = ids.find((eid) => eid.endsWith(`_${d.slug}`) || eid.match(new RegExp(`_${d.slug}_\\d+$`)));
-        if (hit) out[k] = hit;
-      }
+      // translation_key, sonst (end) Ende der Entitäts-ID am Gerät, sonst prefix + deutsche Endung
+      const hit = byTk[d.tk]?.[0]
+        || (d.end && ids.find((eid) => eid.endsWith(`_${d.slug}`) || eid.match(new RegExp(`_${d.slug}_\\d+$`))));
       const eid = `sensor.${b.prefix}_${d.slug}`;
-      if (!out[k] && b.prefix && this._hass.states[eid]) out[k] = eid;
+      if (hit) out[k] = hit;
+      else if (b.prefix && this._hass.states[eid]) out[k] = eid;
     }
     return out;
   }

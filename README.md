@@ -81,8 +81,8 @@ If you rename a device later, update `bike` as well.
 
 The cards find the sensors through the device registry (`translation_key`).
 The language of the entity IDs doesn't matter, and you can rename them.
-Exceptions are the battery values (`cycles`, `energy`, `efficiency`) and the highest point of the last ride:
-the integration has no `translation_key` for them, so their entity IDs must keep their English ending (e.g. `_charge_cycles`).
+For the battery values (`cycles`, `energy`, `efficiency`) and the highest point of the last ride, this needs ha-bosch-ebike 1.19.65 or newer.
+With older versions, these entity IDs must keep their English ending (e.g. `_charge_cycles`).
 
 Below the columns of the comparison, long names wrap onto two lines and are only truncated after that.
 If there still isn't enough room, `short_name` sets a shorter name for the axis; the tooltip keeps showing `name`:
@@ -144,7 +144,8 @@ suffixes:                # optional: own entity ID endings, see below
 
 - `energy` is the energy delivered by the battery in kWh.
 - `efficiency` is the consumption in Wh/km; the most economical value comes first.
-- `suffixes` is only needed if the battery sensors were renamed. A suffix takes precedence over the `translation_key`; without `*` it needs `prefix`.
+- A bike with several batteries shows their sum for `cycles` and `energy`.
+- `suffixes` is only needed with ha-bosch-ebike older than 1.19.65 and renamed battery sensors. A suffix takes precedence over the `translation_key`; without `*` it needs `prefix`.
 - A suffix with `*` (e.g. `*_charge_cycles`) adds up all matching sensors of a bike.
 
 ### Tricks
