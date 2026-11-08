@@ -2,7 +2,7 @@
 
 const BIKES = [
   { id: "bike-0001", label: "E-Bike Trekking", prefix: "e_bike_trekking" },
-  { id: "bike-0002", label: "E-Bike MTB", prefix: "e_bike_mtb" },
+  { id: "bike-0002", label: "E-Bike MTB", prefix: "drive_unit_performance_line_cx", english: true },
 ];
 
 // Deterministischer Zufall, damit die Demo bei jedem Laden gleich aussieht
@@ -41,46 +41,60 @@ function makeActivities() {
   return acts;
 }
 
-function makeStates() {
+// [deutsche Endung, englische Endung, translation_key, Wert je Bike]
+// Das MTB hat englische Entitäts-IDs: die Karten finden es über Gerätename und translation_key
+function sensorList(i) {
+  const d = new Date(Date.now() - (i + 1) * 86400000);
+  const dd = `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
+  return [
+    ["kilometerstand", "odometer", "odometer", 2400 + i * 1300],
+    ["hohenmeter_gesamt", "total_elevation_gain", "total_elevation_gain", 18000 + i * 21000],
+    ["touren_gesamt", "total_rides", "total_rides", 130 - i * 20],
+    ["fahrzeit_gesamt", "total_ride_duration", "total_duration", 140 + i * 30],
+    ["akku_charge_cycles", "battery_charge_cycles", null, 48.5 + i * 22],
+    ["kalorien_gesamt", "total_calories", "total_calories", 52000 + i * 9000],
+    ["akku_wh_lifetime", "battery_wh_lifetime", null, 31000 + i * 26000],
+    ["letzte_fahrt_startzeit", "last_ride_start_time", "last_ride_start_time", `${dd} 16:05`],
+    ["letzte_fahrt_endzeit", "last_ride_end_time", "last_ride_end_time", `${dd} 17:42`],
+    ["letzte_fahrt_titel", "last_ride_title", "last_ride_title", "Feierabendrunde"],
+    ["letzte_fahrt_distanz", "last_ride_distance", "last_ride_distance", 28.4 - i * 9],
+    ["letzte_fahrt_dauer", "last_ride_duration", "last_ride_duration", 81 - i * 20],
+    ["letzte_fahrt_o_geschwindigkeit", "last_ride_avg_speed", "last_ride_avg_speed", 21.0],
+    ["letzte_fahrt_max_geschwindigkeit", "last_ride_max_speed", "last_ride_max_speed", 34.2],
+    ["letzte_fahrt_hohenmeter", "last_ride_elevation_gain", "last_ride_elevation_gain", 310 + i * 200],
+    ["letzte_fahrt_hohenmeter_2", "last_ride_elevation_loss", "last_ride_elevation_loss", 305 + i * 200],
+    ["last_ride_max_altitude", "last_ride_max_altitude", null, 438 + i * 120],
+    ["letzte_fahrt_kalorien", "last_ride_calories", "last_ride_calories", 640],
+    ["letzte_fahrt_o_trittfrequenz", "last_ride_avg_cadence", "last_ride_avg_cadence", 72],
+    ["letzte_fahrt_max_trittfrequenz", "last_ride_max_cadence", "last_ride_max_cadence", 104],
+    ["letzte_fahrt_o_leistung", "last_ride_avg_power", "last_ride_avg_power", 138],
+    ["letzte_fahrt_max_leistung", "last_ride_max_power", "last_ride_max_power", 512],
+    ["letzte_fahrt_sprunge", "last_ride_jumps", "last_ride_jumps", i ? 4 : 0],
+    ["letzte_fahrt_wheelies", "last_ride_wheelies", "last_ride_wheelies", i ? 2 : 0],
+  ];
+}
+
+function makeRegistry() {
   const states = {};
-  const set = (id, state, attributes = {}) => { states[id] = { entity_id: id, state: String(state), attributes }; };
+  const entities = {};
+  const devices = {};
   BIKES.forEach((b, i) => {
-    const p = `sensor.${b.prefix}`;
-    set(`${p}_kilometerstand`, 2400 + i * 1300);
-    set(`${p}_hohenmeter_gesamt`, 18000 + i * 21000);
-    set(`${p}_touren_gesamt`, 130 - i * 20);
-    set(`${p}_fahrzeit_gesamt`, 140 + i * 30);
-    set(`${p}_akku_charge_cycles`, 48.5 + i * 22);
-    set(`${p}_kalorien_gesamt`, 52000 + i * 9000);
-    set(`${p}_akku_wh_lifetime`, 31000 + i * 26000);
-    const d = new Date(Date.now() - (i + 1) * 86400000);
-    const dd = `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
-    set(`${p}_letzte_fahrt_startzeit`, `${dd} 16:05`);
-    set(`${p}_letzte_fahrt_endzeit`, `${dd} 17:42`);
-    set(`${p}_letzte_fahrt_titel`, "Feierabendrunde");
-    set(`${p}_letzte_fahrt_distanz`, 28.4 - i * 9);
-    set(`${p}_letzte_fahrt_dauer`, 81 - i * 20);
-    set(`${p}_letzte_fahrt_o_geschwindigkeit`, 21.0);
-    set(`${p}_letzte_fahrt_max_geschwindigkeit`, 34.2);
-    set(`${p}_letzte_fahrt_hohenmeter`, 310 + i * 200);
-    set(`${p}_letzte_fahrt_hohenmeter_2`, 305 + i * 200);
-    set(`${p}_last_ride_max_altitude`, 438 + i * 120);
-    set(`${p}_letzte_fahrt_kalorien`, 640);
-    set(`${p}_letzte_fahrt_o_trittfrequenz`, 72);
-    set(`${p}_letzte_fahrt_max_trittfrequenz`, 104);
-    set(`${p}_letzte_fahrt_o_leistung`, 138);
-    set(`${p}_letzte_fahrt_max_leistung`, 512);
-    set(`${p}_letzte_fahrt_sprunge`, i ? 4 : 0);
-    set(`${p}_letzte_fahrt_wheelies`, i ? 2 : 0);
+    const device = `device-${i + 1}`;
+    devices[device] = { id: device, name: "Performance Line CX", name_by_user: b.label,
+      identifiers: [["ha_bosch_ebike", b.id]] };
+    for (const [de, en, tk, value] of sensorList(i)) {
+      const id = `sensor.${b.prefix}_${b.english ? en : de}`;
+      states[id] = { entity_id: id, state: String(value), attributes: {} };
+      entities[id] = { entity_id: id, device_id: device, platform: "ha_bosch_ebike", translation_key: tk };
+    }
   });
-  return states;
+  return { states, entities, devices };
 }
 
 const activities = makeActivities();
 
 export const hass = {
-  states: makeStates(),
-  entities: null,
+  ...makeRegistry(),
   async callWS(msg) {
     if (msg.type === "bosch_ebike/list_instances") {
       return { instances: [{ bikes: BIKES.map(({ id, label }) => ({ id, label })) }] };
@@ -92,5 +106,5 @@ export const hass = {
 
 export const bikes = [
   { name: "Trekking", prefix: "e_bike_trekking" },
-  { name: "MTB", prefix: "e_bike_mtb" },
+  { name: "MTB", bike: "E-Bike MTB" },
 ];

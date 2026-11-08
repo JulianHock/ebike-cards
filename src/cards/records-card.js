@@ -46,7 +46,7 @@ class EbikeRecordsCard extends HTMLElement {
     const wanted = Array.isArray(config.records) ? config.records : Object.keys(ERC_RECORDS);
     this._records = wanted.filter((r) => ERC_RECORDS[r]);
     if (!this._records.length) this._records = Object.keys(ERC_RECORDS);
-    const names = config.bikes.map((b) => b.name || b.prefix);
+    const names = config.bikes.map((b) => b.name || b.bike || b.prefix);
     let saved = null;
     try { saved = localStorage.getItem(`ebike-records:${this._config.title}`); } catch (e) { /* ignore */ }
     this._sel = names.indexOf(saved);
@@ -85,7 +85,7 @@ class EbikeRecordsCard extends HTMLElement {
     const bikes = allBikes(instances);
     const minKm = Number(this._config.min_avg_km) || 0;
     this._stats = this._config.bikes.map((cb) => {
-      const id = resolveBikeId(cb, bikes);
+      const id = resolveBikeId(cb, bikes, this._hass);
       const best = {};
       let count = 0;
       if (id) {
@@ -113,7 +113,7 @@ class EbikeRecordsCard extends HTMLElement {
     const tabs = cfg.bikes.map((b, i) => `
       <button class="tab ${i === this._sel ? "on" : ""}" data-bike="${i}"
         style="--c:${cssValue(b.color) || PALETTE[i % PALETTE.length]}">
-        <span class="dot"></span><span>${esc(b.name || b.prefix)}</span>
+        <span class="dot"></span><span>${esc(b.name || b.bike || b.prefix)}</span>
       </button>`).join("");
 
     let body;
@@ -182,7 +182,7 @@ class EbikeRecordsCard extends HTMLElement {
         if (!t) return;
         this._sel = Number(t.dataset.bike);
         const b = this._config.bikes[this._sel];
-        try { localStorage.setItem(`ebike-records:${this._config.title}`, b?.name || b?.prefix); } catch (e) { /* ignore */ }
+        try { localStorage.setItem(`ebike-records:${this._config.title}`, b?.name || b?.bike || b?.prefix); } catch (e) { /* ignore */ }
         this._render();
       });
     }

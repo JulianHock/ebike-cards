@@ -1,7 +1,8 @@
 /* =====================================================================
  * eBike Compare Card – Rangliste der Absolutwerte je Bike
  *   type: custom:ebike-compare-card
- *   bikes: [{ name, prefix, color, short_name }]
+ *   bikes: [{ name, prefix | bike, color, short_name }]
+ *     bike: Gerätename oder Bike-ID (statt prefix)
  *     short_name: optional kürzerer Name unter den Säulen (vertikales Layout); der Tooltip zeigt weiter 'name'
  *   Reiter: odometer, elevation, rides, duration, cycles, calories,
  *           energy (kWh vom Akku abgegeben), efficiency (Ø Wh/km, sparsamstes zuerst)
@@ -11,14 +12,17 @@
 import { PALETTE } from "../shared/constants.js";
 import { fmt, esc, niceScale, stepDigits, cssValue } from "../shared/format.js";
 import { registerCard } from "../shared/register.js";
+import { findBikeDevice, deviceSensors } from "../shared/bosch.js";
 
+// tk: translation_key der Integration (unabhängig von Sprache und Umbenennungen);
+// suffix: Ende der Entitäts-ID, wenn es keinen translation_key gibt oder er nicht gefunden wird
 const ECC_METRICS = {
-  odometer:  { suffix: "kilometerstand",    label: "Kilometer",  unit: "km",   digits: 0, icon: "mdi:map-marker-distance" },
-  elevation: { suffix: "hohenmeter_gesamt", label: "Höhenmeter", unit: "m",    digits: 0, icon: "mdi:image-filter-hdr" },
-  rides:     { suffix: "touren_gesamt",     label: "Touren",     unit: "",     digits: 0, icon: "mdi:flag-checkered" },
-  duration:  { suffix: "fahrzeit_gesamt",   label: "Fahrzeit",   unit: "h",    digits: 1, icon: "mdi:timer-outline" },
+  odometer:  { tk: "odometer",             suffix: "kilometerstand",    label: "Kilometer",  unit: "km",   digits: 0, icon: "mdi:map-marker-distance" },
+  elevation: { tk: "total_elevation_gain", suffix: "hohenmeter_gesamt", label: "Höhenmeter", unit: "m",    digits: 0, icon: "mdi:image-filter-hdr" },
+  rides:     { tk: "total_rides",          suffix: "touren_gesamt",     label: "Touren",     unit: "",     digits: 0, icon: "mdi:flag-checkered" },
+  duration:  { tk: "total_duration",       suffix: "fahrzeit_gesamt",   label: "Fahrzeit",   unit: "h",    digits: 1, icon: "mdi:timer-outline" },
   cycles:    { suffix: "*_charge_cycles",   label: "Ladezyklen", unit: "",     digits: 1, icon: "mdi:battery-sync" },
-  calories:  { suffix: "kalorien_gesamt",   label: "Kalorien",   unit: "kcal", digits: 0, icon: "mdi:fire" },
+  calories:  { tk: "total_calories",       suffix: "kalorien_gesamt",   label: "Kalorien",   unit: "kcal", digits: 0, icon: "mdi:fire" },
   // Vom Akku abgegebene Energie über seine Lebensdauer (Bosch-Zähler, in Wh) → kWh
   energy:    { suffix: "*_wh_lifetime",     label: "Energie",    unit: "kWh",  digits: 2, scale: 0.001, icon: "mdi:lightning-bolt" },
   // Energie gesamt / Kilometerstand – beides Zähler direkt vom Bike; kleiner ist sparsamer
@@ -38,13 +42,14 @@ class EbikeCompareCard extends HTMLElement {
 
   setConfig(config) {
     if (!Array.isArray(config.bikes) || !config.bikes.length) {
-      throw new Error("Bitte unter 'bikes' mindestens ein Bike mit name und prefix angeben");
+      throw new Error("Bitte unter 'bikes' mindestens ein Bike mit name und prefix (oder bike) angeben");
     }
     this._config = { title: "Vergleich", sort: true, layout: "vertical", height: 170, show_scale: true, ...config, background: cssValue(config.background) };
     const overrides = config.suffixes || {};
     this._defs = {};
+    // Eine eigene Endung aus 'suffixes' hat Vorrang vor dem translation_key
     for (const [k, m] of Object.entries(ECC_METRICS)) {
-      this._defs[k] = { ...m, suffix: overrides[k] || m.suffix };
+      this._defs[k] = overrides[k] ? { ...m, suffix: overrides[k], tk: null } : m;
     }
     const wanted = Array.isArray(config.metrics) ? config.metrics : Object.keys(ECC_METRICS);
     this._metrics = wanted.filter((m) => this._defs[m]);
@@ -54,6 +59,7 @@ class EbikeCompareCard extends HTMLElement {
     this._metric = this._metrics.includes(saved) ? saved
       : this._metrics.includes(config.metric) ? config.metric : this._metrics[0];
     this._sig = "";
+    this._sensors = null;
     if (this._hass) this._render();
   }
 
@@ -65,11 +71,24 @@ class EbikeCompareCard extends HTMLElement {
 
   getCardSize() { return 2 + this._config.bikes.length; }
 
-  _value(prefix, suffix) {
+  // Sensoren je Bike; neu bestimmt, wenn sich Entitäten- oder Geräte-Register ändern
+  _lookup() {
+    const h = this._hass;
+    if (!this._sensors || this._refs[0] !== h.entities || this._refs[1] !== h.devices) {
+      this._refs = [h.entities, h.devices];
+      this._sensors = this._config.bikes.map((b) => ({ prefix: b.prefix, ...deviceSensors(h, findBikeDevice(h, b)) }));
+    }
+    return this._sensors;
+  }
+
+  _value(s, def) {
     const states = this._hass?.states || {};
-    const ids = suffix.startsWith("*")
-      ? Object.keys(states).filter((k) => k.startsWith(`sensor.${prefix}_`) && k.endsWith(suffix.slice(1)))
-      : [`sensor.${prefix}_${suffix}`];
+    let ids;
+    if (def.tk && s.byTk[def.tk]) ids = [s.byTk[def.tk]];
+    else if (def.suffix.startsWith("*")) {
+      const pool = s.ids.length ? s.ids : Object.keys(states).filter((k) => k.startsWith(`sensor.${s.prefix}_`));
+      ids = pool.filter((k) => k.endsWith(def.suffix.slice(1)));
+    } else ids = s.prefix ? [`sensor.${s.prefix}_${def.suffix}`] : [];
     let sum = 0, found = false;
     for (const id of ids) {
       const v = states[id] ? parseFloat(states[id].state) : NaN;
@@ -78,31 +97,32 @@ class EbikeCompareCard extends HTMLElement {
     return found ? sum : null;
   }
 
-  _metricValue(prefix, def) {
+  _metricValue(s, def) {
     if (def.calc) {
-      const wh = this._value(prefix, this._defs.energy.suffix);
-      const km = this._value(prefix, this._defs.odometer.suffix);
+      const wh = this._value(s, this._defs.energy);
+      const km = this._value(s, this._defs.odometer);
       return wh !== null && km > 0 ? wh / km : null;
     }
-    const v = this._value(prefix, def.suffix);
+    const v = this._value(s, def);
     return v !== null && def.scale ? v * def.scale : v;
   }
 
   _signature() {
     if (!this._hass || !this._config) return "";
     const def = this._defs[this._metric];
-    return this._metric + "|" + this._config.bikes.map((b) => this._metricValue(b.prefix, def)).join("|");
+    return this._metric + "|" + this._lookup().map((s) => this._metricValue(s, def)).join("|");
   }
 
   _render() {
     if (!this._config || !this._hass) return;
     const cfg = this._config;
     const def = this._defs[this._metric];
+    const sensors = this._lookup();
     const rows = cfg.bikes.map((b, i) => ({
-      name: b.name || b.prefix,
-      short: b.short_name || b.name || b.prefix,
+      name: b.name || b.bike || b.prefix,
+      short: b.short_name || b.name || b.bike || b.prefix,
       color: cssValue(b.color) || PALETTE[i % PALETTE.length],
-      v: this._metricValue(b.prefix, def),
+      v: this._metricValue(sensors[i], def),
     }));
     if (cfg.sort !== false) {
       rows.sort(def.lower_better

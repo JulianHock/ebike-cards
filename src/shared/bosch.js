@@ -2,6 +2,8 @@
 
 import { slug } from "./format.js";
 
+const PLATFORM = "ha_bosch_ebike";
+
 // Alle Instanzen und Touren über den Websocket der Integration
 export async function loadActivities(hass) {
   const [inst, acts] = await Promise.all([
@@ -17,15 +19,53 @@ export function allBikes(instances) {
   return bikes;
 }
 
+const norm = (s) => String(s ?? "").trim().toLowerCase();
+const bikeKeys = (cfgBike) => [cfgBike.bike, cfgBike.id].filter(Boolean).map(norm);
+const boschIds = (device) => (device?.identifiers || []).filter(([d]) => d === PLATFORM).map(([, id]) => String(id));
+
+// Geräte-ID (Geräte-Register) zu einem Eintrag aus 'bikes' der Kartenkonfiguration:
+// über bike/id (Gerätename oder Bike-ID, nur bei eindeutigem Treffer), sonst über den Entitäts-Präfix
+export function findBikeDevice(hass, cfgBike) {
+  const keys = bikeKeys(cfgBike);
+  if (keys.length) {
+    const hits = Object.values(hass?.devices || {}).filter((d) => {
+      const ids = boschIds(d);
+      return ids.length && (ids.some((id) => keys.includes(norm(id))) || keys.includes(norm(d.name_by_user || d.name)));
+    });
+    if (hits.length === 1) return hits[0].id;
+  }
+  if (!cfgBike.prefix) return null;
+  const counts = {};
+  for (const [eid, e] of Object.entries(hass?.entities || {})) {
+    if (e?.device_id && e.platform === PLATFORM && eid.startsWith(`sensor.${cfgBike.prefix}_`)) {
+      counts[e.device_id] = (counts[e.device_id] || 0) + 1;
+    }
+  }
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+}
+
+// Sensoren eines Geräts: alle Entitäts-IDs und die Zuordnung translation_key → Entitäts-ID
+export function deviceSensors(hass, deviceId) {
+  const ids = [];
+  const byTk = {};
+  if (!deviceId) return { ids, byTk };
+  for (const [eid, e] of Object.entries(hass?.entities || {})) {
+    if (e?.device_id !== deviceId || !eid.startsWith("sensor.")) continue;
+    ids.push(eid);
+    if (e.translation_key) byTk[e.translation_key] = eid;
+  }
+  return { ids, byTk };
+}
+
 // Bike-ID zu einem Eintrag aus 'bikes' der Kartenkonfiguration:
 // über bike/id (Gerätename oder Bike-ID), sonst über den Entitäts-Präfix
-export function resolveBikeId(cfgBike, bikes) {
-  const keys = [cfgBike.bike, cfgBike.id].filter(Boolean).map((k) => String(k).trim().toLowerCase());
-  let hit = bikes.find((b) => keys.includes(String(b.id).toLowerCase())
-    || keys.includes(String(b.label || "").trim().toLowerCase()));
+export function resolveBikeId(cfgBike, bikes, hass) {
+  const keys = bikeKeys(cfgBike);
+  let hit = bikes.find((b) => keys.includes(norm(b.id)) || keys.includes(norm(b.label)));
   if (!hit && cfgBike.prefix) {
+    const ids = boschIds(hass?.devices?.[findBikeDevice(hass, { prefix: cfgBike.prefix })]);
     const p = slug(cfgBike.prefix);
-    hit = bikes.find((b) => slug(b.label) === p);
+    hit = bikes.find((b) => ids.includes(String(b.id))) || bikes.find((b) => slug(b.label) === p);
   }
   return hit ? hit.id : null;
 }

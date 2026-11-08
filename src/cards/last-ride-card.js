@@ -1,7 +1,7 @@
 /* =====================================================================
  * eBike Last Ride Card – die letzte Tour jedes Bikes mit allen Werten
  *   type: custom:ebike-last-ride-card
- *   bikes: [{ name, prefix, color }]   (wie bei der Vergleichskarte)
+ *   bikes: [{ name, prefix | bike, color }]   (wie bei der Vergleichskarte)
  *   Oben wählt man das Bike aus; die Auswahl merkt sich die Karte je Browser.
  *   Ohne Auswahl startet sie beim Bike mit der neuesten Tour.
  *   Optional: bike: Trekking  Start-Bike (Name aus 'bikes')
@@ -20,8 +20,8 @@ import { PALETTE } from "../shared/constants.js";
 import { fmt, esc, cssValue } from "../shared/format.js";
 import { parseTime, hm, clock, weekdayDate } from "../shared/time.js";
 import { registerCard } from "../shared/register.js";
+import { findBikeDevice, deviceSensors } from "../shared/bosch.js";
 
-const ELR_PLATFORM = "ha_bosch_ebike";
 const ELR_SENSORS = {
   start:       { tk: "last_ride_start_time",      slug: "letzte_fahrt_startzeit" },
   end:         { tk: "last_ride_end_time",        slug: "letzte_fahrt_endzeit" },
@@ -53,7 +53,7 @@ class EbikeLastRideCard extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this._sig = "";
-    this._entsRef = null;
+    this._refs = [];
     this._map = [];
   }
 
@@ -61,17 +61,17 @@ class EbikeLastRideCard extends HTMLElement {
 
   setConfig(config) {
     if (!Array.isArray(config.bikes) || !config.bikes.length) {
-      throw new Error("Bitte unter 'bikes' mindestens ein Bike mit name und prefix angeben");
+      throw new Error("Bitte unter 'bikes' mindestens ein Bike mit name und prefix (oder bike) angeben");
     }
     this._config = { title: "Letzte Tour", show_title: true, ...config, background: cssValue(config.background) };
     const wanted = Array.isArray(config.fields) ? config.fields : ELR_FIELDS;
     this._fields = new Set(wanted.filter((f) => ELR_FIELDS.includes(f)));
-    const names = config.bikes.map((b) => b.name || b.prefix);
+    const names = config.bikes.map((b) => b.name || b.bike || b.prefix);
     let saved = null;
     try { saved = localStorage.getItem(`ebike-last-ride:${this._config.title}`); } catch (e) { /* ignore */ }
     this._sel = names.indexOf(saved);
     if (this._sel < 0) this._sel = names.indexOf(config.bike);
-    this._entsRef = null;
+    this._map = [];
     this._sig = "";
     if (this._hass) this._update();
   }
@@ -85,51 +85,30 @@ class EbikeLastRideCard extends HTMLElement {
 
   _update() {
     if (!this._config || !this._hass) return;
-    const ents = this._hass.entities || null;
-    if (ents !== this._entsRef || !this._map.length) {
-      this._entsRef = ents;
-      this._map = this._config.bikes.map((b) => this._resolve(b.prefix));
+    const h = this._hass;
+    if (!this._map.length || this._refs[0] !== h.entities || this._refs[1] !== h.devices) {
+      this._refs = [h.entities, h.devices];
+      this._map = this._config.bikes.map((b) => this._resolve(b));
     }
     const states = this._hass.states;
     const sig = this._map.map((m) => Object.values(m).map((eid) => states[eid]?.state).join(",")).join("|");
     if (sig !== this._sig) { this._sig = sig; this._render(); }
   }
 
-  /* Findet die "Letzte Fahrt"-Sensoren eines Bikes: zuerst über das Geräte-
-     Register (translation_key, unabhängig von Sprache und Umbenennungen),
+  /* Findet die "Letzte Fahrt"-Sensoren eines Bikes: zuerst über das Gerät
+     (translation_key, unabhängig von Sprache und Umbenennungen),
      sonst über die üblichen deutschen Entitäts-IDs. */
-  _resolve(prefix) {
+  _resolve(b) {
     const out = {};
-    if (!prefix) return out;
-    const ents = this._hass.entities;
-    if (ents) {
-      const counts = {};
-      for (const [eid, e] of Object.entries(ents)) {
-        if (e?.device_id && e.platform === ELR_PLATFORM && eid.startsWith(`sensor.${prefix}_`)) {
-          counts[e.device_id] = (counts[e.device_id] || 0) + 1;
-        }
-      }
-      const dev = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
-      if (dev) {
-        const byTk = {};
-        const devIds = [];
-        for (const [eid, e] of Object.entries(ents)) {
-          if (e?.device_id !== dev || !eid.startsWith("sensor.")) continue;
-          devIds.push(eid);
-          if (e.translation_key) byTk[e.translation_key] = eid;
-        }
-        for (const [k, d] of Object.entries(ELR_SENSORS)) {
-          if (d.tk && byTk[d.tk]) out[k] = byTk[d.tk];
-          else if (!d.tk) {
-            const hit = devIds.find((eid) => eid.endsWith(`_${d.slug}`) || eid.match(new RegExp(`_${d.slug}_\\d+$`)));
-            if (hit) out[k] = hit;
-          }
-        }
-      }
-    }
+    const { ids, byTk } = deviceSensors(this._hass, findBikeDevice(this._hass, b));
     for (const [k, d] of Object.entries(ELR_SENSORS)) {
-      const eid = `sensor.${prefix}_${d.slug}`;
-      if (!out[k] && this._hass.states[eid]) out[k] = eid;
+      if (d.tk && byTk[d.tk]) out[k] = byTk[d.tk];
+      else if (!d.tk) {
+        const hit = ids.find((eid) => eid.endsWith(`_${d.slug}`) || eid.match(new RegExp(`_${d.slug}_\\d+$`)));
+        if (hit) out[k] = hit;
+      }
+      const eid = `sensor.${b.prefix}_${d.slug}`;
+      if (!out[k] && b.prefix && this._hass.states[eid]) out[k] = eid;
     }
     return out;
   }
@@ -173,7 +152,7 @@ class EbikeLastRideCard extends HTMLElement {
     const cfg = this._config;
     const F = this._fields;
     const rows = cfg.bikes.map((b, i) => ({
-      name: b.name || b.prefix,
+      name: b.name || b.bike || b.prefix,
       color: cssValue(b.color) || PALETTE[i % PALETTE.length],
       r: this._ride(this._map[i] || {}),
       i,
@@ -194,7 +173,7 @@ class EbikeLastRideCard extends HTMLElement {
     const tileFor = ({ color, r }) => {
       if (!r.found) {
         return `<div class="tile" style="--c:${color}">
-          <div class="muted">Keine Sensoren gefunden – bitte 'prefix' prüfen</div></div>`;
+          <div class="muted">Keine Sensoren gefunden – bitte 'prefix' oder 'bike' prüfen</div></div>`;
       }
       if (!r.start && r.distance === null) {
         return `<div class="tile" style="--c:${color}"><div class="muted">Noch keine Tour</div></div>`;
@@ -290,7 +269,8 @@ class EbikeLastRideCard extends HTMLElement {
         const t = ev.target.closest("button[data-bike]");
         if (!t) return;
         this._sel = Number(t.dataset.bike);
-        const name = this._config.bikes[this._sel]?.name || this._config.bikes[this._sel]?.prefix;
+        const b = this._config.bikes[this._sel];
+        const name = b?.name || b?.bike || b?.prefix;
         try { localStorage.setItem(`ebike-last-ride:${this._config.title}`, name); } catch (e) { /* ignore */ }
         this._render();
       });

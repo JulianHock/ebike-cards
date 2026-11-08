@@ -71,16 +71,24 @@ These options apply to all cards:
 
 The cards remember the selected tabs per browser (localStorage, the key includes the title).
 
-The card configuration identifies **bikes** in two ways:
+Each entry in a card's `bikes` list identifies a bike in one of two ways:
 
-- `prefix`: the entity prefix of the sensors, e.g. `e_bike_trekking` for `sensor.e_bike_trekking_kilometerstand`
-- `bike`: alternatively the device name or the bike ID from the integration (Tricks and Records only)
+- `bike`: the device name or the bike ID from the integration, e.g. `bike: E-Bike Trekking` (recommended)
+- `prefix`: the entity prefix of its sensors, e.g. `e_bike_trekking` for `sensor.e_bike_trekking_kilometerstand`
+
+If two bikes have the same device name (e.g. the same motor and not renamed), use the bike ID or `prefix`.
+If you rename a device later, update `bike` as well.
+
+The cards find the sensors through the device registry (`translation_key`).
+The language of the entity IDs doesn't matter, and you can rename them.
+Exceptions are the battery values (`cycles`, `energy`, `efficiency`) and the highest point of the last ride:
+the integration has no `translation_key` for them, so their entity IDs must keep their English ending (e.g. `_charge_cycles`).
 
 Below the columns of the comparison, long names wrap onto two lines and are only truncated after that.
 If there still isn't enough room, `short_name` sets a shorter name for the axis; the tooltip keeps showing `name`:
 
 ```yaml
-  - { name: Erika E-MTB, short_name: Erika MTB, prefix: e_mtb_erika }
+  - { name: Erika E-MTB, short_name: Erika MTB, bike: E-MTB Erika }
 ```
 
 ### Ride statistics
@@ -122,20 +130,21 @@ The bikes come from the integration automatically. `names`, `colors` and `order`
 type: custom:ebike-compare-card
 title: Vergleich
 bikes:
-  - { name: Trekking, prefix: e_bike_trekking, color: "#03a9f4" }
-  - { name: MTB, prefix: e_bike_mtb }
+  - { name: Trekking, bike: E-Bike Trekking, color: "#03a9f4" }
+  - { name: MTB, bike: E-Bike MTB }
 metrics: [odometer, elevation, rides, duration, cycles, calories, energy, efficiency]
 layout: vertical         # vertical | horizontal
 height: 170
 sort: true
 show_scale: true
 show_leader: false       # trophy for the leader
-suffixes:                # optional: different sensor suffixes
-  odometer: kilometerstand
+suffixes:                # optional: own entity ID endings, see below
+  cycles: "*_charge_cycles"
 ```
 
 - `energy` is the energy delivered by the battery in kWh.
 - `efficiency` is the consumption in Wh/km; the most economical value comes first.
+- `suffixes` is only needed if the battery sensors were renamed. A suffix takes precedence over the `translation_key`; without `*` it needs `prefix`.
 - A suffix with `*` (e.g. `*_charge_cycles`) adds up all matching sensors of a bike.
 
 ### Tricks
@@ -150,7 +159,7 @@ suffixes:                # optional: different sensor suffixes
 type: custom:ebike-tricks-card
 title: Tricks
 bikes:
-  - { name: MTB, prefix: e_bike_mtb }
+  - { name: MTB, bike: E-Bike MTB }
 trick: jump              # initial tab
 tricks: [jump, wheelie, manual, stoppie]
 sort: true
@@ -171,16 +180,15 @@ The card adds up wheelies, manuals, stoppies and jumps across all rides. Each re
 type: custom:ebike-last-ride-card
 title: Letzte Tour
 bikes:
-  - { name: Trekking, prefix: e_bike_trekking }
-  - { name: MTB, prefix: e_bike_mtb }
-bike: Trekking           # initial bike; otherwise the one with the latest ride
+  - { name: Trekking, bike: E-Bike Trekking }
+  - { name: MTB, bike: E-Bike MTB }
+bike: Trekking           # initial bike (its name); otherwise the one with the latest ride
 show_title: true
 fields: [duration, pauses, avg_speed, max_speed, up, down, max_alt,
          avg_power, max_power, avg_cadence, max_cadence, calories, tricks]
 ```
 
-The card finds the sensors through the device registry (`translation_key`), regardless of language and renames.
-If they aren't in the registry, it falls back to the usual German entity IDs.
+If the sensors aren't in the device registry, the card falls back to the usual German entity IDs (needs `prefix`).
 
 ### Records
 
@@ -194,9 +202,9 @@ If they aren't in the registry, it falls back to the usual German entity IDs.
 type: custom:ebike-records-card
 title: Bestwerte
 bikes:
-  - { name: Trekking, prefix: e_bike_trekking }
-  - { name: MTB, prefix: e_bike_mtb }
-bike: Trekking
+  - { name: Trekking, bike: E-Bike Trekking }
+  - { name: MTB, bike: E-Bike MTB }
+bike: Trekking           # initial bike (its name)
 records: [distance, up, ride_time, max_speed, avg_speed, calories]
 min_avg_km: 5            # minimum distance for "Schnellster Schnitt" (fastest average)
 ```
@@ -213,9 +221,9 @@ min_avg_km: 5            # minimum distance for "Schnellster Schnitt" (fastest a
 type: custom:ebike-goal-card
 title: Jahresziel
 bikes:
-  - { name: Trekking, prefix: e_bike_trekking, goal: 3000 }   # goal: target in km for the current year
-  - { name: MTB, prefix: e_bike_mtb, goal: 1500 }
-bike: Trekking           # initial bike; otherwise the first one
+  - { name: Trekking, bike: E-Bike Trekking, goal: 3000 }   # goal: target in km for the current year
+  - { name: MTB, bike: E-Bike MTB, goal: 1500 }
+bike: Trekking           # initial bike (its name); otherwise the first one
 show_last_year: true     # previous year as a gray line
 height: 180
 ```

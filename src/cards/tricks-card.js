@@ -96,7 +96,7 @@ class EbikeTricksCard extends HTMLElement {
       return {
         name: cb.name || cb.bike || cb.prefix,
         color: cssValue(cb.color) || PALETTE[i % PALETTE.length],
-        id: resolveBikeId(cb, bikes),
+        id: resolveBikeId(cb, bikes, this._hass),
         hasData: false,
         per,
         order: i,

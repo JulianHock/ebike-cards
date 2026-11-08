@@ -54,14 +54,14 @@ class EbikeGoalCard extends HTMLElement {
 
   setConfig(config) {
     if (!Array.isArray(config.bikes) || !config.bikes.length) {
-      throw new Error("Bitte unter 'bikes' mindestens ein Bike mit name, prefix und goal angeben");
+      throw new Error("Bitte unter 'bikes' mindestens ein Bike mit name, prefix (oder bike) und goal angeben");
     }
     const missing = config.bikes.filter((b) => !(Number(b.goal) > 0)).map((b) => b.name || b.prefix || b.bike);
     if (missing.length) {
       throw new Error(`Bitte für jedes Bike ein Jahresziel in km unter 'goal' angeben (fehlt bei: ${missing.join(", ")})`);
     }
     this._config = { title: "Jahresziel", show_last_year: true, height: 180, refresh_minutes: 15, ...config, background: cssValue(config.background) };
-    const names = config.bikes.map((b) => b.name || b.prefix);
+    const names = config.bikes.map((b) => b.name || b.bike || b.prefix);
     let saved = null;
     try { saved = localStorage.getItem(`ebike-goal:${this._config.title}`); } catch (e) { /* ignore */ }
     this._sel = names.indexOf(saved);
@@ -111,7 +111,7 @@ class EbikeGoalCard extends HTMLElement {
     const known = allBikes(instances);
     const today = egcDayIndex(Date.now(), year);
     this._data = this._config.bikes.map((cb) => {
-      const id = resolveBikeId(cb, known);
+      const id = resolveBikeId(cb, known, this._hass);
       const acts = [];
       if (id) {
         for (const a of activities) {
@@ -148,7 +148,7 @@ class EbikeGoalCard extends HTMLElement {
     const d = this._bike();
     const tabs = cfg.bikes.map((b, i) => `
       <button class="tab ${i === this._sel ? "on" : ""}" data-bike="${i}" style="--c:${this._color(i)}">
-        <span class="dot"></span><span>${esc(b.name || b.prefix)}</span>
+        <span class="dot"></span><span>${esc(b.name || b.bike || b.prefix)}</span>
       </button>`).join("");
 
     let msg = "";
@@ -216,7 +216,7 @@ class EbikeGoalCard extends HTMLElement {
       this._sel = Number(t.dataset.bike);
       this._hover = -1;
       const b = this._config.bikes[this._sel];
-      try { localStorage.setItem(`ebike-goal:${this._config.title}`, b?.name || b?.prefix); } catch (e) { /* ignore */ }
+      try { localStorage.setItem(`ebike-goal:${this._config.title}`, b?.name || b?.bike || b?.prefix); } catch (e) { /* ignore */ }
       this._render();
     });
     const at = (ev) => {
