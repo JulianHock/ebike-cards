@@ -2,6 +2,7 @@
 //   node build.mjs           einmalig bauen
 //   node build.mjs --watch   bei Änderungen neu bauen
 //   node build.mjs --serve   neu bauen und die Demo unter http://localhost:8000/demo/ ausliefern
+//                            (anderer Port: --port=8001)
 
 import * as esbuild from "esbuild";
 import { readFileSync } from "node:fs";
@@ -9,6 +10,7 @@ import { readFileSync } from "node:fs";
 const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url)));
 const watch = process.argv.includes("--watch");
 const serve = process.argv.includes("--serve");
+const port = Number(process.argv.find((a) => a.startsWith("--port="))?.slice(7)) || 8000;
 
 const options = {
   entryPoints: ["src/index.js"],
@@ -27,8 +29,8 @@ if (watch || serve) {
   const ctx = await esbuild.context(options);
   await ctx.watch();
   if (serve) {
-    const { port } = await ctx.serve({ servedir: ".", port: 8000 });
-    console.log(`Demo: http://localhost:${port}/demo/`);
+    const server = await ctx.serve({ servedir: ".", port });
+    console.log(`Demo: http://localhost:${server.port}/demo/`);
   }
 } else {
   await esbuild.build(options);

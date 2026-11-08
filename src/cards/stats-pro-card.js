@@ -16,6 +16,7 @@ import { fmt, esc, niceScale, cssValue } from "../shared/format.js";
 import { isoWeek } from "../shared/time.js";
 import { loadActivities } from "../shared/bosch.js";
 import { registerCard } from "../shared/register.js";
+import { defineEditor, F, startTab } from "../shared/editor.js";
 
 const ESP_UNASSIGNED = "__none__";
 
@@ -64,6 +65,29 @@ function espValue(metric, agg) {
   }
 }
 
+const ESP_LABELS = Object.fromEntries(Object.entries(ESP_METRICS).map(([k, m]) => [k, m.label]));
+
+const ESP_EDITOR = defineEditor("ebike-stats-pro-card-editor", {
+  defaults: { period: "month", metric: "distance", metrics: Object.keys(ESP_METRICS), stacked: true,
+    show_totals: true, legend_values: false, hide_unassigned: false, height: 220, refresh_minutes: 15 },
+  sections: [
+    { schema: () => [F.title("Fahrstatistik")] },
+    { title: "Anzeige", schema: ({ config }) => [
+      F.multi("metrics", "Reiter", ESP_LABELS),
+      startTab("metric", "Start-Reiter", ESP_LABELS, config, "metrics"),
+      F.select("period", "Start-Zeitraum", { week: "Wochen", month: "Monate", year: "Jahre" },
+        "Danach merkt sich die Karte Zeitraum und Stapelung je Browser"),
+      F.bool("stacked", "Balken stapeln"),
+      F.bool("show_totals", "Summen über alle Bikes anzeigen"),
+      F.bool("legend_values", "Summe je Bike in der Legende"),
+      F.bool("hide_unassigned", "Touren ohne Bike ausblenden"),
+      F.height,
+    ] },
+    { title: "Bikes", series: true },
+    { title: "Erweitert", collapsed: true, schema: () => [F.background, F.refresh] },
+  ],
+});
+
 class EbikeStatsProCard extends HTMLElement {
   constructor() {
     super();
@@ -80,6 +104,8 @@ class EbikeStatsProCard extends HTMLElement {
   static getStubConfig() {
     return { title: "Fahrstatistik" };
   }
+
+  static getConfigElement() { return document.createElement(ESP_EDITOR); }
 
   setConfig(config) {
     this._config = {

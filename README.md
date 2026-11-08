@@ -78,6 +78,25 @@ Your card configurations stay as they are, because the card types are the same.
 
 ## Configuration
 
+### Visual editor
+
+All cards can be set up in the dashboard's visual editor, YAML is optional.
+When you add a card from the card picker, it already lists all bikes of the integration (the annual goal card starts with 2,000 km per bike).
+
+- **Bikes**: name, bike (drop-down with the bikes of the integration), color (click the color square; × goes back to the default color) and order (arrows).
+  The comparison also has the short name, the annual goal card the goal in km.
+- **Display**: tabs, initial tab or bike and the other options of the card.
+- **Advanced** (collapsed): background and how often the rides are reloaded.
+
+For a bike picked in the editor, `bike` holds the bike ID, so renaming the device doesn't break the card.
+Entries that use the device name or `prefix` keep working; the editor shows them with the matching bike.
+For ride statistics, the editor lists the bikes of the integration and writes `names`, `colors` and `order`.
+
+The editor only writes what you change. Options it doesn't offer, such as `suffixes`, stay in the YAML as they are.
+The tabs keep the order from the YAML; tabs you tick are added at the end.
+
+### Options
+
 These options apply to all cards:
 
 | Option | Meaning |
@@ -278,15 +297,15 @@ Below it: the share of the goal, how far ahead of or behind plan you are, and th
 src/
   index.js              entry point, imports all cards
   cards/*.js            one file per card
-  shared/*.js           shared helpers (formatting, time, websocket, registration)
-demo/                   test page with made-up data
+  shared/*.js           shared helpers (formatting, time, websocket, registration, UI editor)
+demo/                   test page with made-up data (?editor shows each card next to its UI editor)
 build.mjs               esbuild → dist/ebike-cards.js
 ```
 
 ```bash
 npm install
 npm run build   # build dist/ebike-cards.js
-npm run demo    # demo at http://localhost:8000/demo/, rebuilds on changes
+npm run demo    # demo at http://localhost:8000/demo/, rebuilds on changes (other port: node build.mjs --serve --port=8001)
 npm test        # unit tests
 ```
 

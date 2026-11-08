@@ -16,7 +16,8 @@
 import { PALETTE } from "../shared/constants.js";
 import { fmt, esc, cssValue } from "../shared/format.js";
 import { clock, shortDate, weekdayDateTime } from "../shared/time.js";
-import { loadActivities, allBikes, resolveBikeId } from "../shared/bosch.js";
+import { loadActivities, allBikes, resolveBikeId, stubBikes } from "../shared/bosch.js";
+import { defineEditor, F, startTab } from "../shared/editor.js";
 import { registerCard } from "../shared/register.js";
 
 const ETC_TRICKS = {
@@ -33,6 +34,24 @@ const ETC_STATS = {
   angle:  { field: "max_angle_deg",  label: "max. Winkel", unit: "°", digits: 0, optional: true },
 };
 
+const ETC_LABELS = Object.fromEntries(Object.entries(ETC_TRICKS).map(([k, t]) => [k, t.plural]));
+
+const ETC_EDITOR = defineEditor("ebike-tricks-card-editor", {
+  defaults: (c) => ({ tricks: Object.keys(ETC_TRICKS), trick: (c.tricks || Object.keys(ETC_TRICKS))[0],
+    sort: true, show_leader: false, refresh_minutes: 15 }),
+  sections: [
+    { schema: () => [F.title("Tricks")] },
+    { title: "Bikes", bikes: {} },
+    { title: "Anzeige", schema: ({ config }) => [
+      F.multi("tricks", "Reiter", ETC_LABELS),
+      startTab("trick", "Start-Reiter", ETC_LABELS, config, "tricks"),
+      F.bool("sort", "Nach Anzahl sortieren", "Aus: Reihenfolge wie in der Bike-Liste"),
+      F.bool("show_leader", "Pokal für die Bestwerte"),
+    ] },
+    { title: "Erweitert", collapsed: true, schema: () => [F.background, F.refresh] },
+  ],
+});
+
 class EbikeTricksCard extends HTMLElement {
   constructor() {
     super();
@@ -42,7 +61,9 @@ class EbikeTricksCard extends HTMLElement {
     this._bound = false;
   }
 
-  static getStubConfig() { return { title: "Tricks", bikes: [] }; }
+  static async getStubConfig(hass) { return { title: "Tricks", bikes: await stubBikes(hass) }; }
+
+  static getConfigElement() { return document.createElement(ETC_EDITOR); }
 
   setConfig(config) {
     if (!Array.isArray(config.bikes) || !config.bikes.length) {

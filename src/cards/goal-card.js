@@ -14,7 +14,8 @@
 
 import { PALETTE, MONTHS_SHORT, MONTHS_LONG, DAY } from "../shared/constants.js";
 import { fmt, esc, niceScale, cssValue } from "../shared/format.js";
-import { loadActivities, allBikes, resolveBikeId } from "../shared/bosch.js";
+import { loadActivities, allBikes, resolveBikeId, stubBikes } from "../shared/bosch.js";
+import { defineEditor, F } from "../shared/editor.js";
 import { registerCard } from "../shared/register.js";
 
 // Tag im Jahr, 0-basiert (1. Januar = 0)
@@ -39,6 +40,26 @@ function egcCumulative(acts, year) {
   return perDay.map((v) => (sum += v));
 }
 
+const EGC_GOAL = 2000;   // Ziel in km für neu hinzugefügte Bikes
+
+const EGC_EDITOR = defineEditor("ebike-goal-card-editor", {
+  defaults: { show_last_year: true, height: 180, refresh_minutes: 15 },
+  sections: [
+    { schema: () => [F.title("Jahresziel")] },
+    { title: "Bikes", bikes: {
+      add: { goal: EGC_GOAL },
+      fields: () => [{ name: "goal", label: "Jahresziel", required: true,
+        selector: { number: { min: 1, max: 100000, step: 50, mode: "box", unit_of_measurement: "km" } } }],
+    } },
+    { title: "Anzeige", schema: ({ config }) => [
+      F.startBike(config, "Erstes Bike der Liste"),
+      F.bool("show_last_year", "Vorjahr als graue Linie"),
+      F.height,
+    ] },
+    { title: "Erweitert", collapsed: true, schema: () => [F.background, F.refresh] },
+  ],
+});
+
 class EbikeGoalCard extends HTMLElement {
   constructor() {
     super();
@@ -50,7 +71,9 @@ class EbikeGoalCard extends HTMLElement {
     this._bound = false;
   }
 
-  static getStubConfig() { return { title: "Jahresziel", bikes: [] }; }
+  static async getStubConfig(hass) { return { title: "Jahresziel", bikes: await stubBikes(hass, { goal: EGC_GOAL }) }; }
+
+  static getConfigElement() { return document.createElement(EGC_EDITOR); }
 
   setConfig(config) {
     if (!Array.isArray(config.bikes) || !config.bikes.length) {

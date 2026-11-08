@@ -7,7 +7,15 @@ import { hm, clock, weekdayDate } from "./time.js";
 export const RIDE_FIELDS = ["duration", "pauses", "avg_speed", "max_speed", "up", "down", "max_alt",
   "avg_power", "max_power", "avg_cadence", "max_cadence", "calories", "tricks"];
 
-const TRICK_NAMES = [["jumps", "Jump", "Jumps"], ["wheelies", "Wheelie", "Wheelies"],
+// Bezeichnungen der Detailwerte für den UI-Editor (wie in der Kachel)
+export const RIDE_FIELD_LABELS = {
+  duration: "Dauer gesamt", pauses: "Pausen", avg_speed: "Ø Tempo", max_speed: "Max. Tempo",
+  up: "Aufwärts", down: "Abwärts", max_alt: "Höchster Punkt", avg_power: "Ø Eigenleistung",
+  max_power: "Max. Leistung", avg_cadence: "Ø Trittfrequenz", max_cadence: "Max. Trittfrequenz",
+  calories: "Kalorien", tricks: "Tricks",
+};
+
+const TRICK_NAMES =[["jumps", "Jump", "Jumps"], ["wheelies", "Wheelie", "Wheelies"],
   ["manuals", "Manual", "Manuals"], ["stoppies", "Stoppie", "Stoppies"]];
 
 // Tricks einer Tour: get(key) liefert die Anzahl je Trickart

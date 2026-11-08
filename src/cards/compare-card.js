@@ -12,7 +12,8 @@
 import { PALETTE } from "../shared/constants.js";
 import { fmt, esc, niceScale, stepDigits, cssValue } from "../shared/format.js";
 import { registerCard } from "../shared/register.js";
-import { findBikeDevice, deviceSensors } from "../shared/bosch.js";
+import { findBikeDevice, deviceSensors, stubBikes } from "../shared/bosch.js";
+import { defineEditor, F, startTab } from "../shared/editor.js";
 
 // tk: translation_key der Integration (unabhängig von Sprache und Umbenennungen; mehrere Treffer,
 //     z. B. zwei Akkus, werden addiert); suffix: Ende der Entitäts-ID, wenn der translation_key fehlt
@@ -30,6 +31,28 @@ const ECC_METRICS = {
   efficiency: { calc: true,                 label: "Verbrauch",  unit: "Wh/km", digits: 1, lower_better: true, icon: "mdi:gauge" },
 };
 
+const ECC_LABELS = Object.fromEntries(Object.entries(ECC_METRICS).map(([k, m]) => [k, m.label]));
+
+const ECC_EDITOR = defineEditor("ebike-compare-card-editor", {
+  defaults: (c) => ({ metrics: Object.keys(ECC_METRICS), metric: (c.metrics || Object.keys(ECC_METRICS))[0],
+    layout: "vertical", height: 170, sort: true, show_scale: true, show_leader: false }),
+  sections: [
+    { schema: () => [F.title("Vergleich")] },
+    { title: "Bikes", bikes: { fields: () => [{ name: "short_name", label: "Kurzname",
+      helper: "Optional: kürzerer Name unter den Säulen; der Tooltip zeigt weiter den Namen", selector: { text: {} } }] } },
+    { title: "Anzeige", schema: ({ config }) => [
+      F.multi("metrics", "Reiter", ECC_LABELS),
+      startTab("metric", "Start-Reiter", ECC_LABELS, config, "metrics"),
+      F.select("layout", "Darstellung", { vertical: "Säulen (vertikal)", horizontal: "Balken (horizontal)" }),
+      ...(config.layout === "horizontal" ? [] : [F.height]),
+      F.bool("sort", "Nach Wert sortieren", "Aus: Reihenfolge wie in der Bike-Liste"),
+      F.bool("show_scale", "Skala anzeigen"),
+      F.bool("show_leader", "Pokal für den Spitzenreiter"),
+    ] },
+    { title: "Erweitert", collapsed: true, schema: () => [F.background] },
+  ],
+});
+
 class EbikeCompareCard extends HTMLElement {
   constructor() {
     super();
@@ -39,7 +62,9 @@ class EbikeCompareCard extends HTMLElement {
     this._hover = -1;
   }
 
-  static getStubConfig() { return { title: "Vergleich", bikes: [] }; }
+  static async getStubConfig(hass) { return { title: "Vergleich", bikes: await stubBikes(hass) }; }
+
+  static getConfigElement() { return document.createElement(ECC_EDITOR); }
 
   setConfig(config) {
     if (!Array.isArray(config.bikes) || !config.bikes.length) {

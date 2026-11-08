@@ -19,9 +19,20 @@
     main { display: grid; gap: 16px; justify-content: center; align-items: start;
            grid-template-columns: repeat(auto-fill, minmax(0, var(--demo-card-width))); }
     ha-icon { display: inline-block; width: 16px; height: 16px; }
+    /* Editor-Modus (?editor): Karte und UI-Editor nebeneinander */
+    main.editor { grid-template-columns: repeat(auto-fill, minmax(0, calc(var(--demo-card-width) + 440px + 16px))); }
+    .pair { display: grid; grid-template-columns: var(--demo-card-width) 440px; gap: 16px; align-items: start; }
+    .panel { background: var(--card-background-color); border: 1px solid var(--divider-color); border-radius: 12px;
+             padding: 16px; }
+    .panel pre { font-size: 11px; color: var(--secondary-text-color); white-space: pre-wrap; margin: 16px 0 0;
+                 border-top: 1px solid var(--divider-color); padding-top: 10px; }
+    .err { color: #f44336; font-size: 13px; padding: 12px; }
+    nav { text-align: center; margin-bottom: 12px; font-size: 13px; }
+    nav a { color: var(--primary-color); }
   </style>
 </head>
 <body>
+  <nav><a id="mode" href="?editor">UI-Editoren anzeigen</a></nav>
   <main id="cards"></main>
   <script type="module">
     // Platzhalter für die HA-Elemente, die die Karten verwenden
@@ -46,6 +57,91 @@
     });
     customElements.define("ha-icon", class extends HTMLElement {});
 
+    // Stark vereinfachter Ersatz für ha-form (nur die Selektoren, die die Editoren verwenden)
+    customElements.define("ha-form", class extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({ mode: "open" });
+        this._data = {};
+        this.shadowRoot.addEventListener("input", (ev) => this._changed(ev));
+        this.shadowRoot.addEventListener("change", (ev) => this._changed(ev));
+      }
+      get schema() { return this._schema; }
+      set schema(s) { this._schema = s; this._build(); }
+      get data() { return this._data; }
+      set data(d) { this._data = d || {}; this._fill(); }
+      _fields(schema = this._schema || []) {
+        return schema.flatMap((f) => (f.type === "grid" ? this._fields(f.schema) : [f]));
+      }
+      _field(f) {
+        const label = this.computeLabel ? this.computeLabel(f) : f.name;
+        const helper = this.computeHelper?.(f);
+        const sel = f.selector || {};
+        let input;
+        if (sel.boolean) {
+          return `<label class="row bool"><input type="checkbox" data-n="${f.name}"><span>${label}</span></label>
+            ${helper ? `<div class="help">${helper}</div>` : ""}`;
+        }
+        if (sel.select?.multiple) {
+          input = `<div class="multi">${sel.select.options.map((o) => `
+            <label><input type="checkbox" data-n="${f.name}" data-v="${o.value}">${o.label}</label>`).join("")}</div>`;
+        } else if (sel.select) {
+          input = `<select data-n="${f.name}"><option value=""></option>${sel.select.options.map((o) => `
+            <option value="${o.value}">${o.label}</option>`).join("")}</select>`;
+        } else if (sel.number) {
+          input = `<span class="num"><input type="number" data-n="${f.name}" min="${sel.number.min ?? ""}"
+            max="${sel.number.max ?? ""}" step="${sel.number.step ?? 1}"><i>${sel.number.unit_of_measurement || ""}</i></span>`;
+        } else {
+          input = `<input type="text" data-n="${f.name}">`;
+        }
+        return `<label class="row"><span>${label}${f.required ? " *" : ""}</span>${input}</label>
+          ${helper ? `<div class="help">${helper}</div>` : ""}`;
+      }
+      _build() {
+        const item = (f) => (f.type === "grid"
+          ? `<div class="grid">${f.schema.map((x) => `<div>${this._field(x)}</div>`).join("")}</div>` : this._field(f));
+        this.shadowRoot.innerHTML = `
+          <style>
+            :host { display: block; font-size: 14px; }
+            .row { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+            .row.bool { flex-direction: row; align-items: center; gap: 8px; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+            input[type=text], input[type=number], select { font: inherit; padding: 7px 8px; border-radius: 6px;
+              background: #2a2a2a; color: inherit; border: 1px solid #444; width: 100%; box-sizing: border-box; }
+            .num { display: flex; gap: 6px; align-items: center; } .num i { font-style: normal; color: #9b9b9b; }
+            .multi { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; }
+            .multi label { display: flex; gap: 6px; align-items: center; }
+            .help { font-size: 11.5px; color: #9b9b9b; margin-top: 2px; }
+          </style>${(this._schema || []).map(item).join("")}`;
+        this._fill();
+      }
+      _fill() {
+        const active = this.shadowRoot.activeElement;
+        for (const el of this.shadowRoot.querySelectorAll("[data-n]")) {
+          if (el === active && el.type !== "checkbox") continue;
+          const v = this._data[el.dataset.n];
+          if (el.dataset.v !== undefined) el.checked = Array.isArray(v) && v.includes(el.dataset.v);
+          else if (el.type === "checkbox") el.checked = !!v;
+          else el.value = v ?? "";
+        }
+      }
+      _changed(ev) {
+        const el = ev.target;
+        const n = el.dataset?.n;
+        if (!n) return;
+        if (el.type === "text" && ev.type === "change") return;
+        if (el.type !== "text" && ev.type === "input") return;
+        let v;
+        if (el.dataset.v !== undefined) {
+          const cur = Array.isArray(this._data[n]) ? this._data[n] : [];
+          v = el.checked ? [...cur, el.dataset.v] : cur.filter((x) => x !== el.dataset.v);
+        } else if (el.type === "checkbox") v = el.checked;
+        else if (el.type === "number") v = el.value === "" ? undefined : Number(el.value);
+        else v = el.value === "" ? undefined : el.value;
+        this.dispatchEvent(new CustomEvent("value-changed", { detail: { value: { ...this._data, [n]: v } } }));
+      }
+    });
+
     import("../dist/ebike-cards.js").then(async () => {
       const { hass, bikes } = await import("./mock-hass.js");
       const configs = [
@@ -58,11 +154,42 @@
         { type: "ebike-goal-card", bikes: bikes.map((b, i) => ({ ...b, goal: i ? 1500 : 3000 })) },
       ];
       const main = document.getElementById("cards");
+      const editor = new URLSearchParams(location.search).has("editor");
+      if (editor) {
+        main.classList.add("editor");
+        Object.assign(document.getElementById("mode"), { href: "?", textContent: "Nur Karten anzeigen" });
+      }
       for (const cfg of configs) {
         const el = document.createElement(cfg.type);
         el.setConfig(cfg);
-        main.appendChild(el);
         el.hass = hass;
+        if (!editor) { main.appendChild(el); continue; }
+        // Wie im Kartendialog von HA: config-changed geht an Vorschau und Editor zurück
+        const pair = document.createElement("div");
+        pair.className = "pair";
+        const preview = document.createElement("div");
+        preview.appendChild(el);
+        const panel = document.createElement("div");
+        panel.className = "panel";
+        const ed = el.constructor.getConfigElement();
+        const pre = document.createElement("pre");
+        const show = (c) => { pre.textContent = JSON.stringify(c, null, 2); };
+        ed.setConfig(cfg);
+        ed.hass = hass;
+        show(cfg);
+        ed.addEventListener("config-changed", (ev) => {
+          const c = ev.detail.config;
+          show(c);
+          preview.querySelector(".err")?.remove();
+          try { el.setConfig(c); el.hidden = false; } catch (e) {
+            el.hidden = true;
+            preview.insertAdjacentHTML("beforeend", `<div class="err">${e.message}</div>`);
+          }
+          ed.setConfig(c);
+        });
+        panel.append(ed, pre);
+        pair.append(preview, panel);
+        main.appendChild(pair);
       }
     });
   </script>

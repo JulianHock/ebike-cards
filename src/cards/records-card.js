@@ -14,7 +14,8 @@
 import { PALETTE } from "../shared/constants.js";
 import { fmt, esc, cssValue } from "../shared/format.js";
 import { hm, weekdayDateTime } from "../shared/time.js";
-import { loadActivities, allBikes, resolveBikeId } from "../shared/bosch.js";
+import { loadActivities, allBikes, resolveBikeId, stubBikes } from "../shared/bosch.js";
+import { defineEditor, F } from "../shared/editor.js";
 import { registerCard } from "../shared/register.js";
 
 const ERC_RECORDS = {
@@ -27,6 +28,23 @@ const ERC_RECORDS = {
   calories:      { label: "Meiste Kalorien",     unit: "kcal", digits: 0, get: (a) => Number(a.caloriesBurned) },
 };
 
+const ERC_LABELS = Object.fromEntries(Object.entries(ERC_RECORDS).map(([k, r]) => [k, r.label]));
+
+const ERC_EDITOR = defineEditor("ebike-records-card-editor", {
+  defaults: { records: Object.keys(ERC_RECORDS), min_avg_km: 5, refresh_minutes: 15 },
+  sections: [
+    { schema: () => [F.title("Bestwerte")] },
+    { title: "Bikes", bikes: {} },
+    { title: "Anzeige", schema: ({ config }) => [
+      F.startBike(config, "Erstes Bike der Liste"),
+      F.multi("records", "Bestwerte", ERC_LABELS),
+      { name: "min_avg_km", label: "Mindeststrecke für „Schnellster Schnitt“",
+        selector: { number: { min: 0, max: 200, step: 1, mode: "box", unit_of_measurement: "km" } } },
+    ] },
+    { title: "Erweitert", collapsed: true, schema: () => [F.background, F.refresh] },
+  ],
+});
+
 class EbikeRecordsCard extends HTMLElement {
   constructor() {
     super();
@@ -36,7 +54,9 @@ class EbikeRecordsCard extends HTMLElement {
     this._bound = false;
   }
 
-  static getStubConfig() { return { title: "Bestwerte", bikes: [] }; }
+  static async getStubConfig(hass) { return { title: "Bestwerte", bikes: await stubBikes(hass) }; }
+
+  static getConfigElement() { return document.createElement(ERC_EDITOR); }
 
   setConfig(config) {
     if (!Array.isArray(config.bikes) || !config.bikes.length) {

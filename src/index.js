@@ -4,6 +4,7 @@
  * Enthält: ebike-stats-pro-card, ebike-compare-card, ebike-tricks-card,
  *          ebike-last-ride-card, ebike-ride-select-card, ebike-records-card, ebike-goal-card
  *
+ * Jede Karte hat einen UI-Editor (shared/editor.js), YAML ist optional.
  * Alle Karten übernehmen den Kartenhintergrund des aktiven Themes.
  * Optional: background: "#1e1e1e" setzt einen eigenen Hintergrund (jede CSS-Farbe).
  */

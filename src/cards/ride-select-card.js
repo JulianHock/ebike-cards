@@ -19,8 +19,9 @@
 
 import { PALETTE, WEEKDAYS } from "../shared/constants.js";
 import { fmt, esc, cssValue } from "../shared/format.js";
-import { loadActivities, allBikes, resolveBikeId } from "../shared/bosch.js";
-import { RIDE_FIELDS, TRACK_FIELDS, activityToRide, trackStats, groupByMonth, rideTile, rideCardCss }
+import { loadActivities, allBikes, resolveBikeId, stubBikes } from "../shared/bosch.js";
+import { defineEditor, F } from "../shared/editor.js";
+import { RIDE_FIELDS, RIDE_FIELD_LABELS, TRACK_FIELDS, activityToRide, trackStats, groupByMonth, rideTile, rideCardCss }
   from "../shared/ride.js";
 import { registerCard } from "../shared/register.js";
 
@@ -38,6 +39,19 @@ function optionLabel(r) {
   return parts.join(" · ");
 }
 
+const ERS_EDITOR = defineEditor("ebike-ride-select-card-editor", {
+  defaults: { fields: RIDE_FIELDS, refresh_minutes: 15 },
+  sections: [
+    { schema: () => [F.title("Tourauswahl")] },
+    { title: "Bikes", bikes: {} },
+    { title: "Anzeige", schema: ({ config }) => [
+      F.startBike(config, "Automatisch (Bike mit der neuesten Tour)"),
+      F.multi("fields", "Detailwerte", RIDE_FIELD_LABELS),
+    ] },
+    { title: "Erweitert", collapsed: true, schema: () => [F.background, F.refresh] },
+  ],
+});
+
 class EbikeRideSelectCard extends HTMLElement {
   constructor() {
     super();
@@ -50,7 +64,9 @@ class EbikeRideSelectCard extends HTMLElement {
     this._tracks = new Map();   // Tour-Key:Distanz → Trackwerte | "loading" | "error"
   }
 
-  static getStubConfig() { return { title: "Tourauswahl", bikes: [] }; }
+  static async getStubConfig(hass) { return { title: "Tourauswahl", bikes: await stubBikes(hass) }; }
+
+  static getConfigElement() { return document.createElement(ERS_EDITOR); }
 
   setConfig(config) {
     if (!Array.isArray(config.bikes) || !config.bikes.length) {

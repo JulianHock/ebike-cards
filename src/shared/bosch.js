@@ -58,6 +58,35 @@ export function deviceSensors(hass, deviceId) {
   return { ids, byTk };
 }
 
+// Bikes der Integration für Editor und Kartenauswahl: id, label (aus der Integration) und
+// name (Gerätename, wie er in HA angezeigt wird). Ohne Websocket über das Geräte-Register.
+export async function integrationBikes(hass) {
+  let list = [];
+  try {
+    list = allBikes((await hass.callWS({ type: "bosch_ebike/list_instances" }))?.instances || []);
+  } catch (e) { /* Integration fehlt oder antwortet nicht */ }
+  const devices = Object.values(hass?.devices || {}).filter((d) => boschIds(d).length);
+  if (!list.length) list = devices.map((d) => ({ id: boschIds(d)[0], label: d.name_by_user || d.name }));
+  const seen = new Set();
+  return list.filter((b) => b?.id && !seen.has(String(b.id)) && seen.add(String(b.id))).map((b) => {
+    const id = String(b.id);
+    const dev = devices.find((d) => boschIds(d).includes(id));
+    const label = b.label || id;
+    return { id, label, name: dev?.name_by_user || dev?.name || label };
+  });
+}
+
+// Bike-Liste für eine neu eingefügte Karte: alle Bikes der Integration
+export async function stubBikes(hass, extra = {}) {
+  return (await integrationBikes(hass)).map((b) => ({ name: b.name, bike: b.id, ...extra }));
+}
+
+// Eintrag aus 'bikes' passt zu einem Bike der Integration (über bike/id oder den Namen)
+export function matchesBike(cfgBike, b) {
+  const keys = bikeKeys(cfgBike || {});
+  return keys.includes(norm(b.id)) || keys.includes(norm(b.label)) || keys.includes(norm(b.name));
+}
+
 // Bike-ID zu einem Eintrag aus 'bikes' der Kartenkonfiguration:
 // über bike/id (Gerätename oder Bike-ID), sonst über den Entitäts-Präfix
 export function resolveBikeId(cfgBike, bikes, hass) {

@@ -19,9 +19,10 @@
 import { PALETTE } from "../shared/constants.js";
 import { esc, cssValue } from "../shared/format.js";
 import { parseTime } from "../shared/time.js";
-import { RIDE_FIELDS, rideTricks, rideTile, rideCardCss } from "../shared/ride.js";
+import { RIDE_FIELDS, RIDE_FIELD_LABELS, rideTricks, rideTile, rideCardCss } from "../shared/ride.js";
 import { registerCard } from "../shared/register.js";
-import { findBikeDevice, deviceSensors } from "../shared/bosch.js";
+import { findBikeDevice, deviceSensors, stubBikes } from "../shared/bosch.js";
+import { defineEditor, F } from "../shared/editor.js";
 
 const ELR_SENSORS = {
   start:       { tk: "last_ride_start_time",      slug: "letzte_fahrt_startzeit" },
@@ -47,6 +48,20 @@ const ELR_SENSORS = {
   stoppies:    { tk: "last_ride_stoppies",        slug: "letzte_fahrt_stoppies" },
 };
 
+const ELR_EDITOR = defineEditor("ebike-last-ride-card-editor", {
+  defaults: { show_title: true, fields: RIDE_FIELDS },
+  sections: [
+    { schema: () => [F.title("Letzte Tour")] },
+    { title: "Bikes", bikes: {} },
+    { title: "Anzeige", schema: ({ config }) => [
+      F.startBike(config, "Automatisch (Bike mit der neuesten Tour)"),
+      F.bool("show_title", "Tourtitel anzeigen"),
+      F.multi("fields", "Detailwerte", RIDE_FIELD_LABELS),
+    ] },
+    { title: "Erweitert", collapsed: true, schema: () => [F.background] },
+  ],
+});
+
 class EbikeLastRideCard extends HTMLElement {
   constructor() {
     super();
@@ -56,7 +71,9 @@ class EbikeLastRideCard extends HTMLElement {
     this._map = [];
   }
 
-  static getStubConfig() { return { title: "Letzte Tour", bikes: [] }; }
+  static async getStubConfig(hass) { return { title: "Letzte Tour", bikes: await stubBikes(hass) }; }
+
+  static getConfigElement() { return document.createElement(ELR_EDITOR); }
 
   setConfig(config) {
     if (!Array.isArray(config.bikes) || !config.bikes.length) {
