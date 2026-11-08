@@ -15,24 +15,40 @@ All cards live in a single file (`ebike-cards.js`), so HA only needs one resourc
 
 The screenshots under [Configuration](#configuration) come from the demo and show made-up data. The card labels are in German.
 
-## Installation via HACS
+## Installation via the Marketplace
 
-1. HACS → ⋮ → **Custom repositories**
-   Repository: `https://github.com/JulianHock/ebike-cards`, type: **Dashboard**
-2. Search for "eBike Cards" in HACS and **download** it
+Since Home Assistant 2026.11, the Marketplace is built in and replaces HACS.
+
+1. **Settings → Marketplace → Add from link**
+   GitHub link: `https://github.com/JulianHock/ebike-cards`, then **Add**
+   (if asked for a type, choose **Dashboard**)
+2. Open "eBike Cards" and select **Install**
 3. Reload the browser (clear the cache if needed)
 
-HACS adds the resource `/hacsfiles/ebike-cards/ebike-cards.js` itself if your dashboards are managed in UI mode.
-In YAML mode, add it yourself:
+Adding a custom repository requires a GitHub connection, which the Marketplace asks for the first time.
+
+The Marketplace adds the resource `/local/community/ebike-cards/ebike-cards.js` itself if your dashboards are managed in UI mode.
+In YAML mode, add it yourself (the install dialog shows the exact path):
 
 ```yaml
 lovelace:
   resources:
-    - url: /hacsfiles/ebike-cards/ebike-cards.js
+    - url: /local/community/ebike-cards/ebike-cards.js
       type: module
 ```
 
 Updates appear in HA under **Settings → Updates** as soon as a new release is published.
+
+### Alternative: HACS (Home Assistant 2026.10 and older)
+
+1. HACS → ⋮ → **Custom repositories**
+   Repository: `https://github.com/JulianHock/ebike-cards`, type: **Dashboard**
+2. Search for "eBike Cards" in HACS and **download** it
+3. Reload the browser
+
+In YAML mode, the resource is `/hacsfiles/ebike-cards/ebike-cards.js`.
+When you update to 2026.11, HACS migrates to the Marketplace automatically and the cards stay installed.
+The old `/hacsfiles/` path keeps working; for YAML resources, a repair suggests switching to `/local/community/`.
 
 ### Switching from a manually copied file
 
@@ -229,7 +245,7 @@ npm test        # unit tests
 ### Branches and releases
 
 - `main` holds the published state. Final releases are only made from here; the release workflow rejects other tags.
-- `dev` is the working state. CI builds every push and checks the HACS structure.
+- `dev` is the working state. CI builds every push and checks the repository structure (`hacs.json`, which the Marketplace requires too).
 
 To make a release:
 
@@ -240,7 +256,7 @@ git push --follow-tags
 ```
 
 The tag triggers the release workflow. It builds `ebike-cards.js` and attaches the file to a GitHub release.
-HACS then offers the update.
+The Marketplace (or HACS) then offers the update.
 
 For a test version on `dev`:
 
@@ -249,7 +265,8 @@ npm version prerelease --preid beta   # e.g. v1.16.0-beta.0
 git push --follow-tags
 ```
 
-This creates a pre-release. You can see it in HACS if you enable "Show beta versions" for the repository.
+This creates a pre-release. To see it in the Marketplace, go to **Settings → Devices & services → Marketplace**, open the eBike Cards device, enable the **Pre-release** entity (disabled by default) and turn it on.
+Alternatively, use **⋮ → Install another version** on the repository page. In HACS, enable "Show beta versions" for the repository.
 
 ## License
 
