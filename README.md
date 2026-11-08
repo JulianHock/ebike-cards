@@ -1,8 +1,8 @@
 # eBike Cards
 
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
-[![Home Assistant 2024.1+](https://img.shields.io/badge/Home%20Assistant-2024.1%2B-blue.svg)](https://www.home-assistant.io/)
-[![Requires ha-bosch-ebike](https://img.shields.io/badge/Requires-ha--bosch--ebike-41BDF5.svg)](https://github.com/Xunil99/ha-bosch-ebike)
+[![HACS Custom](docs/badges/hacs-custom.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
+[![Home Assistant 2024.1+](docs/badges/home-assistant.svg)](https://www.home-assistant.io/)
+[![Requires ha-bosch-ebike](docs/badges/requires-ha-bosch-ebike.svg)](https://github.com/Xunil99/ha-bosch-ebike)
 [![Open your Home Assistant instance and open this repository in the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=JulianHock&repository=ebike-cards&category=plugin)
 
 Dashboard cards for Home Assistant that display the data of the [ha-bosch-ebike](https://github.com/Xunil99/ha-bosch-ebike) integration.
