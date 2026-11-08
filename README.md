@@ -217,7 +217,7 @@ refresh_minutes: 15
 Like "Last ride", but you can pick any ride of the selected bike.
 First pick the year in the small drop-down on the left, then the ride in the drop-down next to it: it lists that year's rides, newest first, grouped by month (with the number of rides and km per month).
 The arrows step to the previous or next ride, also across the turn of the year.
-Date, time and title are only shown in the drop-down, not again above the values.
+Each ride in the drop-down shows its weekday, date and title; date and title aren't repeated above the values.
 The card remembers the bike per browser and starts with the latest ride.
 The ride list doesn't include the highest point, power and cadence. The card loads them for the selected ride from its track points (`bosch_ebike/get_track`), so they appear a moment later.
 The averages only count points with pedaling and can differ slightly from the Bosch app.

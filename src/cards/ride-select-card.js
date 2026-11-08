@@ -19,7 +19,6 @@
 
 import { PALETTE, WEEKDAYS } from "../shared/constants.js";
 import { fmt, esc, cssValue } from "../shared/format.js";
-import { clock } from "../shared/time.js";
 import { loadActivities, allBikes, resolveBikeId } from "../shared/bosch.js";
 import { RIDE_FIELDS, TRACK_FIELDS, activityToRide, trackStats, groupByMonth, rideTile, rideCardCss }
   from "../shared/ride.js";
@@ -30,12 +29,11 @@ const LEFT = CHEVRON("M15.41 16.58 10.83 12l4.58-4.59L14 6l-6 6 6 6z");
 const RIGHT = CHEVRON("M8.59 16.58 13.17 12 8.59 7.41 10 6l6 6-6 6z");
 const DOWN = CHEVRON("M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z");
 
-// "Sa 07.11. · 14:05 · 28,4 km · Feierabendrunde"
+// "Sa 07.11. · Feierabendrunde" (ohne Uhrzeit und Distanz, damit die Liste kurz bleibt)
 function optionLabel(r) {
   const d = new Date(r.start);
   const pad = (n) => String(n).padStart(2, "0");
-  const parts = [`${WEEKDAYS[d.getDay()]} ${pad(d.getDate())}.${pad(d.getMonth() + 1)}.`, clock(r.start)];
-  if (r.distance !== null) parts.push(`${fmt(r.distance, 1)} km`);
+  const parts = [`${WEEKDAYS[d.getDay()]} ${pad(d.getDate())}.${pad(d.getMonth() + 1)}.`];
   if (r.title) parts.push(r.title);
   return parts.join(" · ");
 }
