@@ -8,6 +8,7 @@ Dashboard cards for Home Assistant that display the data of the [ha-bosch-ebike]
 | Comparison | `custom:ebike-compare-card` | total sensors per bike |
 | Tricks | `custom:ebike-tricks-card` | all rides (websocket) |
 | Last ride | `custom:ebike-last-ride-card` | "last ride" sensors |
+| Ride selection | `custom:ebike-ride-select-card` | all rides (websocket) |
 | Records | `custom:ebike-records-card` | all rides (websocket) |
 | Annual goal | `custom:ebike-goal-card` | all rides (websocket) |
 
@@ -190,6 +191,28 @@ fields: [duration, pauses, avg_speed, max_speed, up, down, max_alt,
 ```
 
 If the sensors aren't in the device registry, the card falls back to the usual German entity IDs (needs `prefix`).
+
+### Ride selection
+
+```yaml
+type: custom:ebike-ride-select-card
+title: Tourauswahl
+bikes:
+  - { name: Trekking, bike: E-Bike Trekking }
+  - { name: MTB, bike: E-Bike MTB }
+bike: Trekking           # initial bike (its name); otherwise the one with the latest ride
+fields: [duration, pauses, avg_speed, max_speed, up, down, max_alt,
+         avg_power, max_power, avg_cadence, max_cadence, calories, tricks]
+refresh_minutes: 15
+```
+
+Like "Last ride", but you can pick any ride of the selected bike.
+First pick the year in the small drop-down on the left, then the ride in the drop-down next to it: it lists that year's rides, newest first, grouped by month (with the number of rides and km per month).
+The arrows step to the previous or next ride, also across the turn of the year.
+Date, time and title are only shown in the drop-down, not again above the values.
+The card remembers the bike per browser and starts with the latest ride.
+The ride list doesn't include the highest point, power and cadence. The card loads them for the selected ride from its track points (`bosch_ebike/get_track`), so they appear a moment later.
+The averages only count points with pedaling and can differ slightly from the Bosch app.
 
 ### Records
 

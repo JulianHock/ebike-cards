@@ -10,5 +10,6 @@ Live entities are everything that only exists when a live source (ESP32/ESPHome 
 - charge sessions and values derived from them: "Letzte Ladung: Energie", "Geladene Energie gesamt", "Ladeenergie (7/30/365 Tage)", "Restzeit bis 80 %/100 %", "Voraussichtlich fertig bei 80 %/100 %"
 
 Do not offer a config option either that would pull in such values (e.g. a battery level via `soc_entity`).
-Only use data from the Bosch cloud: the integration's regular sensors and the websocket (`bosch_ebike/list_instances`, `bosch_ebike/list_activities`).
+Everything from the Bosch cloud (Bosch eBike Data Act API) may always be used: the integration's regular sensors and every websocket command that returns cloud data, e.g. `bosch_ebike/list_instances`, `bosch_ebike/list_activities` and `bosch_ebike/get_track` (track points of one ride from the activity details).
+The only reason for the rule above is that the user doesn't run the ESP32 live bridge of the integration, so live values would always be missing.
 If a request can only be implemented with live data, say so and ask instead of building it.

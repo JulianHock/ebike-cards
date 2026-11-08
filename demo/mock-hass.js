@@ -19,13 +19,14 @@ function makeActivities() {
     const secs = (km / (16 + rnd() * 10)) * 3600;
     const trick = bike.id === "bike-0002" && rnd() > 0.4;
     acts.push({
+      id: `act-${i}`,
       bikeId: bike.id,
       title: ["Feierabendrunde", "Zur Arbeit", "Waldrunde", "Ausflug"][Math.floor(rnd() * 4)],
       startTime: new Date(start).toISOString(),
       endTime: new Date(start + secs * 1300).toISOString(),
       distance: km * 1000,
       durationWithoutStops: secs,
-      elevation: { gain: km * (bike.id === "bike-0002" ? 25 : 6) * rnd() },
+      elevation: (() => { const gain = km * (bike.id === "bike-0002" ? 25 : 6) * rnd(); return { gain, loss: gain * (0.9 + rnd() * 0.2) }; })(),
       caloriesBurned: km * 20 * rnd(),
       speed: { average: km / (secs / 3600), maximum: 25 + rnd() * 20 },
       trickCheck: trick ? {
@@ -100,6 +101,16 @@ export const hass = {
       return { instances: [{ bikes: BIKES.map(({ id, label }) => ({ id, label })) }] };
     }
     if (msg.type === "bosch_ebike/list_activities") return { activities };
+    if (msg.type === "bosch_ebike/get_track") {
+      // erfundener Track: 200 Punkte mit Höhe, Trittfrequenz und Leistung, kurz verzögert
+      const n = Number(String(msg.activity_id).replace(/\D/g, "")) || 1;
+      await new Promise((r) => setTimeout(r, 300));
+      const track = Array.from({ length: 200 }, (_, i) => ({
+        lat: 50, lon: 9, ele: 250 + 150 * Math.sin((i + n) / 30) + (n % 7) * 10,
+        cadence: i % 10 === 0 ? 0 : 60 + ((i * 7 + n) % 40), power: i % 10 === 0 ? 0 : 90 + ((i * 13 + n) % 300),
+      }));
+      return { track };
+    }
     throw new Error(`Unbekannter Websocket-Befehl: ${msg.type}`);
   },
 };
