@@ -269,6 +269,7 @@ height: 180
 
 Each bike has its own goal. You pick the bike at the top, and the card remembers the selection per browser.
 The chart shows the year's cumulative kilometers against the goal line (a steady pace until December 31) and the previous year.
+A dashed line in the bike's color shows the goal line from today: the steady pace still needed from the current total to reach the goal by December 31.
 Below it: the share of the goal, how far ahead of or behind plan you are, and the km per week needed for the rest of the year.
 
 ## Development

@@ -139,6 +139,14 @@ class EbikeGoalCard extends HTMLElement {
   // Soll-Stand nach Tag 'idx' bei gleichmäßigem Tempo bis 31.12.
   _plan(d, idx) { return d.goal * (idx + 1) / d.cur.length; }
 
+  // Ideallinie ab heute: vom aktuellen Stand gleichmäßig bis zum Ziel am 31.12.
+  // Nur solange das Ziel noch offen ist und das Jahr nicht schon zu Ende ist.
+  _showRest(d) { return d.today < d.cur.length - 1 && d.cur[d.today] < d.goal; }
+  _rest(d, idx) {
+    const done = d.cur[d.today];
+    return done + (d.goal - done) * (idx - d.today) / (d.cur.length - 1 - d.today);
+  }
+
   // Vorjahr nur zeigen, wenn das Bike dort überhaupt gefahren ist
   _showLast(d) { return this._config.show_last_year !== false && d.last[d.last.length - 1] > 0; }
 
@@ -195,6 +203,7 @@ class EbikeGoalCard extends HTMLElement {
         ${ok ? `<div class="legend">
           <span><i class="ln cur"></i>${d.year}</span>
           <span><i class="ln goal"></i>Ziel</span>
+          ${this._showRest(d) ? `<span><i class="ln rest"></i>Ziel ab heute</span>` : ""}
           ${this._showLast(d) ? `<span><i class="ln last"></i>${d.year - 1}</span>` : ""}
         </div>
         <div class="kpis">${kpis}</div>` : ""}
@@ -277,6 +286,9 @@ class EbikeGoalCard extends HTMLElement {
     }
     out += `<line class="goal" x1="${x(0)}" y1="${y(this._plan(d, 0))}" x2="${x(n - 1)}" y2="${y(d.goal)}"/>`;
     if (showLast) out += `<polyline class="last" points="${pts(d.last, lastN - 1)}"/>`;
+    if (this._showRest(d)) {
+      out += `<line class="rest" x1="${x(d.today)}" y1="${y(d.cur[d.today])}" x2="${x(n - 1)}" y2="${y(d.goal)}"/>`;
+    }
     out += `<polyline class="cur" points="${pts(d.cur, d.today)}"/>`;
     out += `<circle class="now" cx="${x(d.today)}" cy="${y(d.cur[d.today])}" r="4"/>`;
     out += `<line class="hl" x1="0" x2="0" y1="${top}" y2="${top + plotH}" visibility="hidden"/>`;
@@ -301,6 +313,7 @@ class EbikeGoalCard extends HTMLElement {
     const rows = [];
     if (i <= d.today) rows.push(["cur", String(d.year), d.cur[i]]);
     rows.push(["goal", "Ziel", this._plan(d, i)]);
+    if (i > d.today && this._showRest(d)) rows.push(["rest", "Ziel ab heute", this._rest(d, i)]);
     if (this._showLast(d)) rows.push(["last", String(d.year - 1), d.last[Math.min(i, d.last.length - 1)]]);
     tip.innerHTML = `
       <div class="tt">${date.getDate()}. ${MONTHS_LONG[date.getMonth()]}</div>
@@ -366,6 +379,7 @@ class EbikeGoalCard extends HTMLElement {
       polyline.cur { stroke: var(--c); stroke-width: 2.5; }
       polyline.last { stroke: rgba(127,127,127,.55); stroke-width: 1.8; }
       line.goal { stroke: var(--sub); stroke-width: 1.5; stroke-dasharray: 5 5; }
+      line.rest { stroke: var(--c); stroke-width: 1.8; stroke-dasharray: 5 5; stroke-linecap: round; opacity: .85; }
       circle.now { fill: var(--c);
                    stroke: ${bg || "var(--ha-card-background, var(--card-background-color, #1e1e1e))"}; stroke-width: 2; }
       line.hl { stroke: rgba(127,127,127,.45); stroke-width: 1; }
@@ -380,6 +394,7 @@ class EbikeGoalCard extends HTMLElement {
       .ln { display: inline-block; width: 14px; height: 0; border-top: 2.5px solid var(--c); flex: none; border-radius: 2px; }
       .ln.goal { border-top: 1.5px dashed var(--sub); }
       .ln.last { border-top: 2px solid rgba(127,127,127,.55); }
+      .ln.rest { border-top: 1.8px dashed var(--c); opacity: .85; }
       .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; font-size: 12px; color: var(--sub); }
       .legend span { display: inline-flex; align-items: center; gap: 6px; }
       .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
