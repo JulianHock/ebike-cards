@@ -1,5 +1,9 @@
 # eBike Cards
 
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
+[![Home Assistant 2024.1+](https://img.shields.io/badge/Home%20Assistant-2024.1%2B-blue.svg)](https://www.home-assistant.io/)
+[![Open your Home Assistant instance and open this repository in the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=JulianHock&repository=ebike-cards&category=plugin)
+
 Dashboard cards for Home Assistant that display the data of the [ha-bosch-ebike](https://github.com/Xunil99/ha-bosch-ebike) integration.
 
 | Card | Type | Data source |
@@ -19,6 +23,10 @@ The screenshots under [Configuration](#configuration) come from the demo and sho
 ## Installation via the Marketplace
 
 Since Home Assistant 2026.11, the Marketplace is built in and replaces HACS.
+
+[![Open your Home Assistant instance and open this repository in the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=JulianHock&repository=ebike-cards&category=plugin)
+
+The button opens the repository directly in your Marketplace. Without it:
 
 1. **Settings → Marketplace → Add from link**
    GitHub link: `https://github.com/JulianHock/ebike-cards`, then **Add**
